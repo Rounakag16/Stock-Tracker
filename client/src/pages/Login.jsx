@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Alert } from "../components/ui";
+import { Alert, PasswordInput } from "../components/ui";
 import { post } from "../lib/api";
 
 export default function LoginPage() {
@@ -85,10 +85,8 @@ export default function LoginPage() {
               <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Password
               </label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
-                className="input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"

@@ -54,6 +54,28 @@ app.get(/^(?!\/api\/).*/, (req, res) => {
   res.sendFile(path.join(clientDist, "index.html"));
 });
 
+// Final safety net: every route handler above is wrapped in asyncHandler
+// (see src/lib/asyncHandler.js), which forwards any error here via next(err)
+// instead of letting it crash the process. This turns "one bad request" —
+// e.g. a malformed date or an invalid id — into a clean error response
+// instead of an outage for every company using the app.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  const status = err.status || 500;
+  res.status(status).json({ error: status === 500 ? "Something went wrong" : err.message });
+});
+
+// Absolute last resort — logs anything that somehow still slips through
+// (e.g. a throw outside any request, in a timer or event handler) instead
+// of taking the whole server down.
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled rejection:", err);
+});
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+});
+
 connectDb()
   .then(() => {
     app.listen(PORT, () => {

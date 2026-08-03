@@ -5,19 +5,24 @@ const Warehouse = require("../models/Warehouse");
 const User = require("../models/User");
 const { requireAuth } = require("../middleware/auth");
 const { applyStockAdjust, applyStockMove, logActivity } = require("../lib/stockOps");
+const { actionWord } = require("../lib/labels");
+const { asyncHandler } = require("../lib/asyncHandler");
 
 const router = express.Router();
 
 function serialize(reqDoc) {
   return {
     id: reqDoc._id,
-    user_id: reqDoc.userId,
-    item_id: reqDoc.itemId,
+    // These fields may be populated {_id, ...} objects (from .populate) or
+    // plain ObjectIds depending on the query — always resolve to just the
+    // id string so frontend comparisons like String(x) === someId work.
+    user_id: reqDoc.userId?._id || reqDoc.userId,
+    item_id: reqDoc.itemId?._id || reqDoc.itemId,
     action: reqDoc.action,
     quantity: reqDoc.quantity,
     party_name: reqDoc.partyName,
-    from_warehouse_id: reqDoc.fromWarehouseId,
-    to_warehouse_id: reqDoc.toWarehouseId,
+    from_warehouse_id: reqDoc.fromWarehouseId?._id || reqDoc.fromWarehouseId,
+    to_warehouse_id: reqDoc.toWarehouseId?._id || reqDoc.toWarehouseId || null,
     status: reqDoc.status,
     review_note: reqDoc.reviewNote,
     created_at: reqDoc.createdAt,
@@ -30,7 +35,10 @@ function serialize(reqDoc) {
 }
 
 // GET /api/stock/requests?status=pending
-router.get("/", requireAuth(), async (req, res) => {
+router.get(
+  "/",
+  requireAuth(),
+  asyncHandler(async (req, res) => {
   const status = req.query.status || "pending";
   const filter = { companyId: req.session.companyId, status };
   if (req.session.role === "employee") {
@@ -50,11 +58,15 @@ router.get("/", requireAuth(), async (req, res) => {
     status: "pending",
   });
 
-  return res.json({ requests: requests.map(serialize), pendingCount });
-});
+    return res.json({ requests: requests.map(serialize), pendingCount });
+  })
+);
 
 // POST /api/stock/requests — employee submits a new request.
-router.post("/", requireAuth(["employee"]), async (req, res) => {
+router.post(
+  "/",
+  requireAuth(["employee"]),
+  asyncHandler(async (req, res) => {
   try {
     const { itemId, amount, type, partyName, toWarehouseId } = req.body;
 
@@ -108,15 +120,16 @@ router.post("/", requireAuth(["employee"]), async (req, res) => {
       itemName: item.name,
       action: "request_submitted",
       quantityChange: type === "deduct" || type === "move" ? -qty : qty,
-      details: `Submitted ${type} request for ${qty} of "${item.name}" — Party: ${party}`,
+      details: `Submitted ${actionWord(type)} request for ${qty} of "${item.name}" — Party: ${party}`,
     });
 
     return res.json({ request: { id: request._id, status: "pending" } });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Something went wrong" });
-  }
-});
+      console.error(err);
+      return res.status(500).json({ error: "Something went wrong" });
+    }
+  })
+);
 
 // Validates a proposed edit against current stock and returns resolved
 // values, falling back to the request's existing values for anything the
@@ -173,13 +186,16 @@ async function persistEdit(reqDoc, resolved, editorId, editorLabel) {
     warehouseId: resolved.warehouseId,
     itemName: resolved.itemName,
     action: "request_edited",
-    details: `${editorLabel} edited ${resolved.type} request for ${resolved.qty} of "${resolved.itemName}" — Party: ${resolved.party}`,
+    details: `${editorLabel} edited ${actionWord(resolved.type)} request for ${resolved.qty} of "${resolved.itemName}" — Party: ${resolved.party}`,
   });
 }
 
 // PATCH /api/stock/requests/:id — employees can edit their own pending
 // request; admins can edit any pending request in their company.
-router.patch("/:id", requireAuth(["admin", "employee"]), async (req, res) => {
+router.patch(
+  "/:id",
+  requireAuth(["admin", "employee"]),
+  asyncHandler(async (req, res) => {
   try {
     const reqDoc = await StockRequest.findOne({
       _id: req.params.id,
@@ -204,13 +220,17 @@ router.patch("/:id", requireAuth(["admin", "employee"]), async (req, res) => {
 
     return res.json({ success: true });
   } catch (err) {
-    return res.status(400).json({ error: err.message || "Something went wrong" });
-  }
-});
+      return res.status(400).json({ error: err.message || "Something went wrong" });
+    }
+  })
+);
 
 // POST /api/stock/requests/:id — admin approves or denies. Approve can
 // carry an optional `edits` object to correct the request in the same step.
-router.post("/:id", requireAuth(["admin"]), async (req, res) => {
+router.post(
+  "/:id",
+  requireAuth(["admin"]),
+  asyncHandler(async (req, res) => {
   try {
     const { action, note, edits } = req.body;
     if (action !== "approve" && action !== "deny") {
@@ -244,7 +264,7 @@ router.post("/:id", requireAuth(["admin"]), async (req, res) => {
         warehouseId: reqDoc.fromWarehouseId,
         itemName,
         action: "request_denied",
-        details: `Denied ${reqDoc.action} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})${note ? ` — ${note}` : ""}`,
+        details: `Denied ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})${note ? ` — ${note}` : ""}`,
       });
 
       return res.json({ success: true, status: "denied" });
@@ -292,13 +312,14 @@ router.post("/:id", requireAuth(["admin"]), async (req, res) => {
       action: "request_approved",
       quantityChange:
         reqDoc.action === "deduct" || reqDoc.action === "move" ? -reqDoc.quantity : reqDoc.quantity,
-      details: `Approved ${reqDoc.action} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})`,
+      details: `Approved ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})`,
     });
 
     return res.json({ success: true, status: "approved" });
   } catch (err) {
-    return res.status(400).json({ error: err.message || "Something went wrong" });
-  }
-});
+      return res.status(400).json({ error: err.message || "Something went wrong" });
+    }
+  })
+);
 
 module.exports = router;

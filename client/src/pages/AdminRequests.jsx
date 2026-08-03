@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Modal, Alert, LoadingSpinner, EmptyState } from "../components/ui";
+import { Modal, Alert, LoadingSpinner, EmptyState, actionWord } from "../components/ui";
 import { get, post, patch } from "../lib/api";
 
 function RequestActionBadge({ action }) {
@@ -8,10 +8,9 @@ function RequestActionBadge({ action }) {
     deduct: "bg-orange-100 text-orange-700",
     move: "bg-purple-100 text-purple-700",
   };
-  const labels = { add: "Add", deduct: "Deduct", move: "Move" };
   return (
     <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-semibold ${styles[action] || "bg-slate-100 text-slate-700"}`}>
-      {labels[action] || action}
+      {actionWord(action)}
     </span>
   );
 }
@@ -216,7 +215,7 @@ export default function AdminRequestsPage() {
         {denyTarget && (
           <div className="space-y-4">
             <p className="text-sm text-slate-600">
-              Deny {denyTarget.requester_name}&apos;s request to {denyTarget.action} {denyTarget.quantity} of {denyTarget.item_name}?
+              Deny {denyTarget.requester_name}&apos;s request to {actionWord(denyTarget.action)} {denyTarget.quantity} of {denyTarget.item_name}?
             </p>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Reason (optional)</label>
@@ -245,7 +244,7 @@ export default function AdminRequestsPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Type</label>
               <select className="select" value={editType} onChange={(e) => setEditType(e.target.value)}>
                 <option value="add">Add</option>
-                <option value="deduct">Deduct</option>
+                <option value="deduct">Sale</option>
                 <option value="move">Move</option>
               </select>
             </div>

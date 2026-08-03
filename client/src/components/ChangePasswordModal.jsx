@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, Alert } from "./ui";
+import { Modal, Alert, PasswordInput } from "./ui";
 import { post } from "../lib/api";
 
 export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername }) {
@@ -61,9 +61,7 @@ export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername 
         {!isReset && (
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Current Password</label>
-            <input
-              type="password"
-              className="input"
+            <PasswordInput
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
@@ -74,9 +72,7 @@ export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername 
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
-          <input
-            type="password"
-            className="input"
+          <PasswordInput
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
@@ -87,9 +83,7 @@ export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername 
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">Confirm New Password</label>
-          <input
-            type="password"
-            className="input"
+          <PasswordInput
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required

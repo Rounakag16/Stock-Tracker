@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { EmployeeNav } from "../components/Nav";
-import { Modal, Alert, LoadingSpinner, EmptyState, QuantityBadge, StatusBadge } from "../components/ui";
+import { Modal, Alert, LoadingSpinner, EmptyState, QuantityBadge, StatusBadge, actionWord } from "../components/ui";
 import { get, post, patch } from "../lib/api";
 
 export default function EmployeePage() {
@@ -169,7 +169,7 @@ export default function EmployeePage() {
 
   const modalTitles = {
     add: "Request Add Stock",
-    deduct: "Request Deduct Stock",
+    deduct: "Request Sale",
     move: "Request Move Stock",
   };
 
@@ -223,7 +223,7 @@ export default function EmployeePage() {
                 {myRequests.map((req) => (
                   <div key={req.id} className="card p-3 text-sm">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="font-medium capitalize">{req.action}</span>
+                      <span className="font-medium">{actionWord(req.action)}</span>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={req.status} />
                         {req.status === "pending" && (
@@ -286,7 +286,7 @@ export default function EmployeePage() {
                         className="btn-danger text-sm"
                         disabled={item.quantity === 0}
                       >
-                        Deduct
+                        Sale
                       </button>
                       <button
                         onClick={() => openRequest(item, "move")}
@@ -374,7 +374,7 @@ export default function EmployeePage() {
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Type</label>
               <select className="select" value={editType} onChange={(e) => setEditType(e.target.value)}>
                 <option value="add">Add</option>
-                <option value="deduct">Deduct</option>
+                <option value="deduct">Sale</option>
                 <option value="move">Move</option>
               </select>
             </div>

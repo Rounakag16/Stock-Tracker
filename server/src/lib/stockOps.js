@@ -73,7 +73,7 @@ async function applyStockAdjust({ companyId, itemId, type, qty, userId, partyNam
     quantityBefore: before,
     quantityAfter: after,
     quantityChange: type === "add" ? qty : -qty,
-    details: `${type === "add" ? "Added" : "Deducted"} ${qty} of "${item.name}" in ${warehouseName}${partyNote}`,
+    details: `${type === "add" ? "Added" : "Sold"} ${qty} of "${item.name}" in ${warehouseName}${partyNote}`,
   });
 
   return { item, before, after };

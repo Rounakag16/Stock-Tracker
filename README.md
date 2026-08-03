@@ -39,19 +39,24 @@ npm run install:all   # installs root, server, and client dependencies
 ```
 
 Create `server/.env` from the example and fill in your MongoDB connection string:
+
 ```bash
 cp server/.env.example server/.env
 ```
+
 Edit `server/.env`:
+
 ```
 MONGODB_URI=mongodb://127.0.0.1:27017/stock-tracker
 JWT_SECRET=<generate with: openssl rand -base64 48>
 ```
 
 Then run both the API and the frontend together:
+
 ```bash
 npm run dev
 ```
+
 - API: http://localhost:4000
 - App: http://localhost:5173 (open this one in your browser)
 
@@ -70,13 +75,13 @@ Then visit whatever port your server is listening on (default `4000`, or whateve
 
 ## Environment Variables (`server/.env`)
 
-| Variable       | Required | Description |
-|----------------|----------|-------------|
-| `MONGODB_URI`  | Yes | Your MongoDB connection string |
-| `JWT_SECRET`   | Yes (production) | Secret used to sign session tokens. Generate with `openssl rand -base64 48`. Falls back to an insecure dev default if unset — never rely on that in production. |
-| `NODE_ENV`     | No | Set to `production` when deployed |
-| `PORT`         | No | Defaults to `4000` |
-| `CLIENT_ORIGIN`| No | Only used in development, for CORS |
+| Variable        | Required         | Description                                                                                                                                                     |
+| --------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MONGODB_URI`   | Yes              | Your MongoDB connection string                                                                                                                                  |
+| `JWT_SECRET`    | Yes (production) | Secret used to sign session tokens. Generate with `openssl rand -base64 48`. Falls back to an insecure dev default if unset — never rely on that in production. |
+| `NODE_ENV`      | No               | Set to `production` when deployed                                                                                                                               |
+| `PORT`          | No               | Defaults to `4000`                                                                                                                                              |
+| `CLIENT_ORIGIN` | No               | Only used in development, for CORS                                                                                                                              |
 
 ## Deploying
 
@@ -100,11 +105,14 @@ npm run install:all
 npm run build
 NODE_ENV=production MONGODB_URI="..." JWT_SECRET="..." npm start
 ```
+
 Use a process manager like [pm2](https://pm2.keymetrics.io/) to keep it running:
+
 ```bash
 npm install -g pm2
 pm2 start server/index.js --name stock-tracker
 ```
+
 Put it behind a reverse proxy (nginx or Caddy) for HTTPS.
 
 ### MongoDB Atlas setup (if you don't have MongoDB already)
