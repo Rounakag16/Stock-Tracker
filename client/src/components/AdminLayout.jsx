@@ -26,11 +26,11 @@ export function AdminLayout() {
   }, []);
 
   if (status === "loading") return <LoadingSpinner />;
-  if (status === "denied") return <Navigate to="/" replace />;
+  if (status === "denied") return <Navigate to="/login" replace />;
   if (status === "wrong-role") return <Navigate to="/employee" replace />;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-paper">
       <AdminNav username={username} companyName={companyName} />
       <div className="admin-content">
         <Outlet />

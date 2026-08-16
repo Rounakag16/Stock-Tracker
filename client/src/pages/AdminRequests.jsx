@@ -142,7 +142,7 @@ export default function AdminRequestsPage() {
             key={s}
             onClick={() => setFilter(s)}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap capitalize ${
-              filter === s ? "bg-brand-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+              filter === s ? "bg-brand-600 text-white" : "bg-white border border-line text-slate-600 hover:bg-slate-50"
             }`}
           >
             {s}
@@ -176,7 +176,7 @@ export default function AdminRequestsPage() {
                   </div>
                   <p className="text-slate-900 font-medium">{req.item_name}</p>
                   <div className="mt-2 space-y-1 text-sm text-slate-600">
-                    <p><span className="text-slate-500">Quantity:</span> <strong className="tabular-nums">{req.quantity}</strong></p>
+                    <p><span className="text-slate-500">Quantity:</span> <strong className="font-mono tabular-nums">{req.quantity}</strong></p>
                     <p><span className="text-slate-500">Party:</span> <strong>{req.party_name}</strong></p>
                     <p>
                       <span className="text-slate-500">Warehouse:</span> {req.from_warehouse_name}
@@ -273,7 +273,7 @@ export default function AdminRequestsPage() {
               <input
                 type="number"
                 min="1"
-                className="input text-lg text-center font-bold"
+                className="input text-lg text-center font-mono font-bold"
                 value={editAmount}
                 onChange={(e) => setEditAmount(e.target.value)}
               />

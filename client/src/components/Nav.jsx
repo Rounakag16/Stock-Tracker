@@ -25,16 +25,16 @@ export function AdminNav({ username, companyName }) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 bg-white border-r border-slate-200">
-        <div className="p-6 border-b border-slate-100">
+      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 bg-white border-r border-line">
+        <div className="p-6 border-b border-line">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center">
+              <svg className="w-5 h-5 text-paper" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
             <div className="min-w-0">
-              <h1 className="font-bold text-slate-900 truncate">{companyName || "Stock Tracker"}</h1>
+              <h1 className="font-display font-bold text-ink truncate">{companyName || "Stock Tracker"}</h1>
               <p className="text-xs text-slate-500">Admin Portal</p>
             </div>
           </div>
@@ -58,7 +58,7 @@ export function AdminNav({ username, companyName }) {
             );
           })}
         </nav>
-        <div className="p-4 border-t border-slate-100 space-y-1">
+        <div className="p-4 border-t border-line space-y-1">
           <p className="text-sm text-slate-600 px-4 mb-2">{username}</p>
           <button onClick={() => setShowPassword(true)} className="btn-ghost w-full justify-start">
             Change password
@@ -70,7 +70,7 @@ export function AdminNav({ username, companyName }) {
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-40">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-line z-40">
         <div className="flex items-center justify-around px-2 py-2">
           {adminLinks.map((link) => {
             const active = location.pathname === link.href;
@@ -93,15 +93,15 @@ export function AdminNav({ username, companyName }) {
       </nav>
 
       {/* Mobile header */}
-      <header className="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-slate-200">
+      <header className="lg:hidden sticky top-0 z-30 bg-paper/85 backdrop-blur-lg border-b border-line">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-8 h-8 rounded-lg bg-ink flex items-center justify-center">
+              <svg className="w-4 h-4 text-paper" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
-            <span className="font-bold text-slate-900">Admin</span>
+            <span className="font-display font-bold text-ink">Admin</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowPassword(true)} className="text-sm text-slate-600 font-medium px-3 py-1.5">
@@ -130,16 +130,16 @@ export function EmployeeNav({ username, companyName }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-slate-200">
+      <header className="sticky top-0 z-30 bg-paper/85 backdrop-blur-lg border-b border-line">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-8 h-8 rounded-lg bg-ink flex items-center justify-center">
+              <svg className="w-4 h-4 text-paper" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
             <div>
-              <span className="font-bold text-slate-900 block leading-tight">{companyName || "Stock Tracker"}</span>
+              <span className="font-display font-bold text-ink block leading-tight">{companyName || "Stock Tracker"}</span>
               <span className="text-xs text-slate-500">{username}</span>
             </div>
           </div>

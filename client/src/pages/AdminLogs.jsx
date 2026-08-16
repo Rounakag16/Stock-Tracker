@@ -142,7 +142,7 @@ export default function AdminLogsPage() {
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
                     selectedActions.includes(opt.value)
                       ? "bg-brand-600 text-white border-brand-600"
-                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      : "bg-white text-slate-600 border-line hover:bg-slate-50"
                   }`}
                 >
                   {opt.label}
@@ -179,7 +179,7 @@ export default function AdminLogsPage() {
                     {log.warehouse_name && <p className="text-xs text-slate-500 mt-0.5">{log.warehouse_name}</p>}
                     {log.details && <p className="text-sm text-slate-600 mt-1">{log.details}</p>}
                     {(log.quantity_before != null || log.quantity_after != null) && (
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1 font-mono">
                         {log.quantity_before != null && `Before: ${log.quantity_before}`}
                         {log.quantity_before != null && log.quantity_after != null && " → "}
                         {log.quantity_after != null && `After: ${log.quantity_after}`}
@@ -191,7 +191,7 @@ export default function AdminLogsPage() {
                       </p>
                     )}
                   </div>
-                  <time className="text-xs text-slate-400 shrink-0 text-right">
+                  <time className="text-xs text-slate-400 shrink-0 text-right font-mono">
                     {new Date(log.created_at).toLocaleString()}
                   </time>
                 </div>

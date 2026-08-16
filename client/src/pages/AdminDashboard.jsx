@@ -15,13 +15,13 @@ function ActivityRow({ log }) {
           {log.item_name}
           {log.warehouse_name && ` · ${log.warehouse_name}`}
           {log.quantity_change != null && (
-            <span className={log.quantity_change > 0 ? " text-emerald-600" : " text-red-600"}>
+            <span className={`font-mono ${log.quantity_change > 0 ? "text-emerald-600" : "text-red-600"}`}>
               {" "}({log.quantity_change > 0 ? "+" : ""}{log.quantity_change})
             </span>
           )}
         </p>
       </div>
-      <time className="text-xs text-slate-400 shrink-0">
+      <time className="text-xs text-slate-400 shrink-0 font-mono">
         {new Date(log.created_at).toLocaleString()}
       </time>
     </div>
@@ -51,31 +51,31 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 mb-6 lg:mb-8">
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Total Items</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mt-1 tabular-nums">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-mono font-bold text-slate-900 mt-1 tabular-nums">
             {stats?.totalItems ?? 0}
           </p>
         </div>
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Total Quantity</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-600 mt-1 tabular-nums">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-600 mt-1 tabular-nums font-mono">
             {stats?.totalQuantity ?? 0}
           </p>
         </div>
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Warehouses</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mt-1 tabular-nums">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-mono font-bold text-slate-900 mt-1 tabular-nums">
             {stats?.warehouseCount ?? 0}
           </p>
         </div>
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Low Stock</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-600 mt-1 tabular-nums">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-600 mt-1 tabular-nums font-mono">
             {stats?.lowStock?.length ?? 0}
           </p>
         </div>
         <Link to="/admin/requests" className="stat-card hover:border-brand-300 transition-colors block">
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Pending Requests</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-600 mt-1 tabular-nums">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-600 mt-1 tabular-nums font-mono">
             {stats?.pendingRequests ?? 0}
           </p>
         </Link>
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
                     <p className="font-medium text-slate-900">{wh.name}</p>
                     <p className="text-xs text-slate-500">{wh.item_count} items</p>
                   </div>
-                  <p className="text-lg lg:text-xl font-bold text-brand-600 tabular-nums">{wh.total_qty}</p>
+                  <p className="text-lg lg:text-xl font-mono font-bold text-brand-600 tabular-nums">{wh.total_qty}</p>
                 </div>
               ))}
             </div>
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
                     <p className="font-medium text-slate-900">{item.name}</p>
                     <p className="text-xs text-slate-500">{item.warehouse_name}</p>
                   </div>
-                  <span className="font-bold text-amber-700 tabular-nums">{item.quantity}</span>
+                  <span className="font-mono font-bold text-amber-700 tabular-nums">{item.quantity}</span>
                 </div>
               ))}
             </div>
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
                         {log.item_name}
                         {log.warehouse_name && <span className="text-slate-400"> · {log.warehouse_name}</span>}
                       </td>
-                      <td className="py-3 pr-4 tabular-nums">
+                      <td className="py-3 pr-4 tabular-nums font-mono">
                         {log.quantity_change != null ? (
                           <span className={log.quantity_change > 0 ? "text-emerald-600 font-medium" : "text-red-600 font-medium"}>
                             {log.quantity_change > 0 ? "+" : ""}{log.quantity_change}
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="py-3 text-slate-400 text-right whitespace-nowrap">
+                      <td className="py-3 text-slate-400 text-right whitespace-nowrap font-mono">
                         {new Date(log.created_at).toLocaleString()}
                       </td>
                     </tr>

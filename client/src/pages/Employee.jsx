@@ -38,7 +38,7 @@ export default function EmployeePage() {
   const loadWarehouses = useCallback(async () => {
     const { data: authData } = await get("/auth/login");
     if (!authData.user) {
-      navigate("/", { replace: true });
+      navigate("/login", { replace: true });
       return [];
     }
     if (authData.user.role !== "employee") {
@@ -233,7 +233,7 @@ export default function EmployeePage() {
                         )}
                       </div>
                     </div>
-                    <p className="text-slate-700">{req.item_name} × {req.quantity}</p>
+                    <p className="text-slate-700">{req.item_name} × <span className="font-mono">{req.quantity}</span></p>
                     <p className="text-slate-500">Party: {req.party_name}</p>
                   </div>
                 ))}
@@ -347,7 +347,7 @@ export default function EmployeePage() {
                 type="number"
                 min="1"
                 max={requestType !== "add" ? selectedItem.quantity : undefined}
-                className="input text-lg text-center font-bold"
+                className="input text-lg text-center font-mono font-bold"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
@@ -405,7 +405,7 @@ export default function EmployeePage() {
               <input
                 type="number"
                 min="1"
-                className="input text-lg text-center font-bold"
+                className="input text-lg text-center font-mono font-bold"
                 value={editAmount}
                 onChange={(e) => setEditAmount(e.target.value)}
                 required
