@@ -37,11 +37,14 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-600/20">
+            <Link
+              to="/"
+              className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-600/20"
+            >
               <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
-            </div>
+            </Link>
             <h1 className="text-2xl font-bold text-slate-900">Stock Tracker</h1>
             <p className="text-slate-500 mt-1">Sign in to manage inventory</p>
           </div>

@@ -8,7 +8,7 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-slate-50 text-slate-900 antialiased font-sans;
   }
 }
 
@@ -67,5 +67,27 @@
 
   .stat-card {
     @apply card p-4 sm:p-5;
+  }
+
+  /* --- Landing page: manifest / shipping-tag motif --- */
+
+  .tear-rule {
+    @apply border-t border-dashed border-line;
+  }
+
+  .tag-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold tracking-wide text-ink/70 font-mono uppercase;
+  }
+
+  .stamp-card {
+    @apply rounded-2xl border border-line bg-white p-5 sm:p-6 transition-all hover:-translate-y-0.5 hover:shadow-md hover:shadow-ink/5;
+  }
+
+  .perforation {
+    @apply flex items-center gap-2.5 px-4;
+  }
+
+  .perforation span {
+    @apply w-2 h-2 rounded-full bg-paper;
   }
 }
