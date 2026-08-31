@@ -10,6 +10,7 @@ export default function AdminStockPage() {
   const [search, setSearch] = useState("");
 
   const [showAdd, setShowAdd] = useState(false);
+  const [showAdjust, setShowAdjust] = useState(false);
   const [showMove, setShowMove] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -17,6 +18,10 @@ export default function AdminStockPage() {
   const [newParty, setNewParty] = useState("");
   const [newQty, setNewQty] = useState("");
   const [newWarehouse, setNewWarehouse] = useState("");
+
+  const [adjustType, setAdjustType] = useState("add");
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustParty, setAdjustParty] = useState("");
 
   const [moveTo, setMoveTo] = useState("");
   const [moveQty, setMoveQty] = useState("");
@@ -78,6 +83,42 @@ export default function AdminStockPage() {
       setSuccess("Item deleted");
       loadData();
     }
+  }
+
+  function openAdjust(item, type) {
+    setSelectedItem(item);
+    setAdjustType(type);
+    setAdjustAmount("");
+    setAdjustParty(item.party_name || "");
+    setError("");
+    setShowAdjust(true);
+  }
+
+  async function handleAdjust(e) {
+    e.preventDefault();
+    if (!selectedItem) return;
+    setError("");
+    setSubmitting(true);
+
+    const { ok, data } = await post("/stock/adjust", {
+      itemId: selectedItem.id,
+      amount: parseInt(adjustAmount, 10),
+      type: adjustType,
+      partyName: adjustParty,
+    });
+    setSubmitting(false);
+
+    if (!ok) {
+      setError(data.error);
+      return;
+    }
+
+    setSuccess(adjustType === "add" ? "Stock added" : "Sale recorded");
+    setShowAdjust(false);
+    setSelectedItem(null);
+    setAdjustAmount("");
+    setAdjustParty("");
+    loadData();
   }
 
   async function handleMove(e) {
@@ -158,12 +199,22 @@ export default function AdminStockPage() {
                     </div>
                     <QuantityBadge quantity={item.quantity} />
                   </div>
-                  <div className="flex gap-2 mt-3">
-                    <button onClick={() => { setSelectedItem(item); setShowMove(true); setError(""); }} className="btn-secondary flex-1 text-xs">
+                  <div className="grid grid-cols-3 gap-2 mt-3">
+                    <button onClick={() => openAdjust(item, "add")} className="btn-secondary text-xs px-1">
+                      Add
+                    </button>
+                    <button
+                      onClick={() => openAdjust(item, "deduct")}
+                      className="btn-secondary text-xs px-1"
+                      disabled={item.quantity === 0}
+                    >
+                      Sale
+                    </button>
+                    <button onClick={() => { setSelectedItem(item); setShowMove(true); setError(""); }} className="btn-secondary text-xs px-1">
                       Move
                     </button>
-                    <button onClick={() => handleDelete(item)} className="btn-danger flex-1 text-xs">Delete</button>
                   </div>
+                  <button onClick={() => handleDelete(item)} className="btn-danger w-full text-xs mt-2">Delete</button>
                 </div>
               ))}
             </div>
@@ -186,7 +237,17 @@ export default function AdminStockPage() {
                       <td className="px-5 py-4 text-slate-600">{item.party_name || "—"}</td>
                       <td className="px-5 py-4 text-slate-600">{item.warehouse_name}</td>
                       <td className="px-5 py-4"><QuantityBadge quantity={item.quantity} /></td>
-                      <td className="px-5 py-4 text-right space-x-2">
+                      <td className="px-5 py-4 text-right space-x-2 whitespace-nowrap">
+                        <button onClick={() => openAdjust(item, "add")} className="btn-secondary text-xs py-2 min-h-0">
+                          Add
+                        </button>
+                        <button
+                          onClick={() => openAdjust(item, "deduct")}
+                          className="btn-secondary text-xs py-2 min-h-0"
+                          disabled={item.quantity === 0}
+                        >
+                          Sale
+                        </button>
                         <button onClick={() => { setSelectedItem(item); setShowMove(true); setError(""); }} className="btn-secondary text-xs py-2 min-h-0">
                           Move
                         </button>
@@ -229,6 +290,68 @@ export default function AdminStockPage() {
             {submitting ? "Adding..." : "Add Item"}
           </button>
         </form>
+      </Modal>
+
+      <Modal
+        open={showAdjust}
+        onClose={() => setShowAdjust(false)}
+        title={adjustType === "add" ? "Add Stock" : "Record Sale"}
+      >
+        {selectedItem && (
+          <form onSubmit={handleAdjust} className="space-y-4">
+            {error && <Alert type="error" message={error} />}
+            <div className="p-3 rounded-xl bg-slate-50 text-sm">
+              <p><span className="text-slate-500">Item:</span> <strong>{selectedItem.name}</strong></p>
+              <p><span className="text-slate-500">Warehouse:</span> {selectedItem.warehouse_name}</p>
+              <p><span className="text-slate-500">Current stock:</span> <span className="font-mono">{selectedItem.quantity}</span></p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100">
+              <button
+                type="button"
+                onClick={() => setAdjustType("add")}
+                className={`rounded-lg py-2 text-sm font-semibold transition-colors ${adjustType === "add" ? "bg-white shadow-sm text-emerald-700" : "text-slate-500"}`}
+              >
+                Add Stock
+              </button>
+              <button
+                type="button"
+                onClick={() => setAdjustType("deduct")}
+                className={`rounded-lg py-2 text-sm font-semibold transition-colors ${adjustType === "deduct" ? "bg-white shadow-sm text-red-700" : "text-slate-500"}`}
+              >
+                Record Sale
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Party Name</label>
+              <input
+                className="input"
+                value={adjustParty}
+                onChange={(e) => setAdjustParty(e.target.value)}
+                placeholder="Customer or supplier (optional)"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Quantity</label>
+              <input
+                type="number"
+                min="1"
+                max={adjustType === "deduct" ? selectedItem.quantity : undefined}
+                className="input text-lg text-center font-mono font-bold"
+                value={adjustAmount}
+                onChange={(e) => setAdjustAmount(e.target.value)}
+                required
+                autoFocus
+              />
+            </div>
+
+            <button type="submit" className="btn-primary w-full" disabled={submitting}>
+              {submitting ? "Saving..." : adjustType === "add" ? "Add Stock" : "Record Sale"}
+            </button>
+          </form>
+        )}
       </Modal>
 
       <Modal open={showMove} onClose={() => setShowMove(false)} title="Move Stock">
