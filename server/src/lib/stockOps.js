@@ -50,6 +50,14 @@ async function applyStockAdjust({ companyId, itemId, type, qty, userId, partyNam
       { $inc: { quantity: qty }, $set: { updatedAt: new Date() } },
       { new: true }
     );
+  } else if (type === "set") {
+    // Direct correction to an exact quantity — not a transaction, so it's
+    // an absolute $set rather than the atomic $inc/$gte guard used below.
+    updated = await StockItem.findOneAndUpdate(
+      { _id: itemId, companyId },
+      { $set: { quantity: qty, updatedAt: new Date() } },
+      { new: true }
+    );
   } else {
     updated = await StockItem.findOneAndUpdate(
       { _id: itemId, companyId, quantity: { $gte: qty } },
@@ -64,16 +72,24 @@ async function applyStockAdjust({ companyId, itemId, type, qty, userId, partyNam
   const after = updated.quantity;
   const partyNote = partyName ? ` (Party: ${partyName})` : "";
 
+  const actionLabel = { add: "add_quantity", deduct: "deduct_quantity", set: "edit_quantity" }[type];
+  const detailText =
+    type === "add"
+      ? `Added ${qty} of "${item.name}" in ${warehouseName}${partyNote}`
+      : type === "deduct"
+        ? `Sold ${qty} of "${item.name}" in ${warehouseName}${partyNote}`
+        : `Edited "${item.name}" in ${warehouseName} to ${after} (was ${before})${partyNote}`;
+
   await logActivity({
     companyId,
     userId,
     warehouseId: item.warehouseId,
     itemName: item.name,
-    action: type === "add" ? "add_quantity" : "deduct_quantity",
+    action: actionLabel,
     quantityBefore: before,
     quantityAfter: after,
-    quantityChange: type === "add" ? qty : -qty,
-    details: `${type === "add" ? "Added" : "Sold"} ${qty} of "${item.name}" in ${warehouseName}${partyNote}`,
+    quantityChange: after - before,
+    details: detailText,
   });
 
   return { item, before, after };

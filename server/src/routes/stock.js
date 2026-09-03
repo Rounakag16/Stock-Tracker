@@ -128,14 +128,18 @@ router.post(
   asyncHandler(async (req, res) => {
     const { itemId, amount, type, partyName } = req.body;
 
-    if (!itemId || !amount || !type) {
+    if (!itemId || amount === undefined || amount === null || amount === "" || !type) {
       return res.status(400).json({ error: "Item, amount, and type are required" });
     }
-    if (type !== "add" && type !== "deduct") {
+    if (!["add", "deduct", "set"].includes(type)) {
       return res.status(400).json({ error: "Invalid type" });
     }
     const qty = parseInt(amount, 10);
-    if (Number.isNaN(qty) || qty <= 0) {
+    if (type === "set") {
+      if (Number.isNaN(qty) || qty < 0) {
+        return res.status(400).json({ error: "Quantity must be zero or greater" });
+      }
+    } else if (Number.isNaN(qty) || qty <= 0) {
       return res.status(400).json({ error: "Amount must be a positive number" });
     }
 

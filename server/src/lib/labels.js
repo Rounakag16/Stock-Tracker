@@ -16,6 +16,7 @@ const ACTIVITY_ACTION_LABELS = {
   delete_item: "Deleted",
   add_quantity: "Added",
   deduct_quantity: "Sale",
+  edit_quantity: "Edited Qty",
   transfer_out: "Moved Out",
   transfer_in: "Moved In",
   create_warehouse: "New Warehouse",

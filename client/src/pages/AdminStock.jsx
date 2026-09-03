@@ -2,6 +2,41 @@ import { useEffect, useState, useCallback } from "react";
 import { Modal, Alert, LoadingSpinner, EmptyState, QuantityBadge } from "../components/ui";
 import { get, post, del } from "../lib/api";
 
+// Summary shown before an admin action actually runs — admin actions apply
+// immediately with no second approver, so this stands in for that missing
+// check. `rows` is a list of {label, value} pairs describing what's about
+// to happen.
+function ConfirmSummary({ rows, onBack, onConfirm, confirmLabel, submitting, danger }) {
+  return (
+    <div className="space-y-4">
+      <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
+        <p className="text-sm font-semibold text-amber-800 mb-2">Review before saving</p>
+        <dl className="space-y-1.5 text-sm">
+          {rows.map((r) => (
+            <div key={r.label} className="flex justify-between gap-3">
+              <dt className="text-slate-500">{r.label}</dt>
+              <dd className="font-medium text-slate-900 text-right font-mono">{r.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <div className="flex gap-3">
+        <button type="button" onClick={onBack} className="btn-secondary flex-1" disabled={submitting}>
+          Back
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          className={`flex-1 ${danger ? "btn-danger" : "btn-primary"}`}
+          disabled={submitting}
+        >
+          {submitting ? "Saving..." : confirmLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminStockPage() {
   const [items, setItems] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -12,6 +47,7 @@ export default function AdminStockPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [showAdjust, setShowAdjust] = useState(false);
   const [showMove, setShowMove] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   const [newName, setNewName] = useState("");
@@ -22,9 +58,14 @@ export default function AdminStockPage() {
   const [adjustType, setAdjustType] = useState("add");
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustParty, setAdjustParty] = useState("");
+  const [adjustStep, setAdjustStep] = useState("form");
 
   const [moveTo, setMoveTo] = useState("");
   const [moveQty, setMoveQty] = useState("");
+  const [moveStep, setMoveStep] = useState("form");
+
+  const [editQty, setEditQty] = useState("");
+  const [editStep, setEditStep] = useState("form");
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -85,17 +126,25 @@ export default function AdminStockPage() {
     }
   }
 
+  // --- Add stock / Record sale ---
+
   function openAdjust(item, type) {
     setSelectedItem(item);
     setAdjustType(type);
     setAdjustAmount("");
     setAdjustParty(item.party_name || "");
+    setAdjustStep("form");
     setError("");
     setShowAdjust(true);
   }
 
-  async function handleAdjust(e) {
+  function reviewAdjust(e) {
     e.preventDefault();
+    setError("");
+    setAdjustStep("confirm");
+  }
+
+  async function confirmAdjust() {
     if (!selectedItem) return;
     setError("");
     setSubmitting(true);
@@ -110,6 +159,7 @@ export default function AdminStockPage() {
 
     if (!ok) {
       setError(data.error);
+      setAdjustStep("form");
       return;
     }
 
@@ -121,8 +171,24 @@ export default function AdminStockPage() {
     loadData();
   }
 
-  async function handleMove(e) {
+  // --- Move stock ---
+
+  function openMove(item) {
+    setSelectedItem(item);
+    setMoveTo("");
+    setMoveQty("");
+    setMoveStep("form");
+    setError("");
+    setShowMove(true);
+  }
+
+  function reviewMove(e) {
     e.preventDefault();
+    setError("");
+    setMoveStep("confirm");
+  }
+
+  async function confirmMove() {
     if (!selectedItem) return;
     setError("");
     setSubmitting(true);
@@ -137,6 +203,7 @@ export default function AdminStockPage() {
 
     if (!ok) {
       setError(data.error);
+      setMoveStep("form");
       return;
     }
 
@@ -148,7 +215,60 @@ export default function AdminStockPage() {
     loadData();
   }
 
+  // --- Edit exact quantity (correction, not a sale/purchase) ---
+
+  function openEdit(item) {
+    setSelectedItem(item);
+    setEditQty(String(item.quantity));
+    setEditStep("form");
+    setError("");
+    setShowEdit(true);
+  }
+
+  function reviewEdit(e) {
+    e.preventDefault();
+    setError("");
+    const qty = parseInt(editQty, 10);
+    if (Number.isNaN(qty) || qty < 0) {
+      setError("Enter a quantity of zero or more");
+      return;
+    }
+    if (qty === selectedItem.quantity) {
+      setError("That's already the current quantity");
+      return;
+    }
+    setEditStep("confirm");
+  }
+
+  async function confirmEdit() {
+    if (!selectedItem) return;
+    setError("");
+    setSubmitting(true);
+
+    const { ok, data } = await post("/stock/adjust", {
+      itemId: selectedItem.id,
+      amount: parseInt(editQty, 10),
+      type: "set",
+    });
+    setSubmitting(false);
+
+    if (!ok) {
+      setError(data.error);
+      setEditStep("form");
+      return;
+    }
+
+    setSuccess("Stock quantity updated");
+    setShowEdit(false);
+    setSelectedItem(null);
+    setEditQty("");
+    loadData();
+  }
+
   if (loading) return <LoadingSpinner />;
+
+  const moveToName = warehouses.find((wh) => String(wh.id) === String(moveTo))?.name || "—";
+  const editDelta = selectedItem ? parseInt(editQty, 10) - selectedItem.quantity : 0;
 
   return (
     <>
@@ -199,7 +319,7 @@ export default function AdminStockPage() {
                     </div>
                     <QuantityBadge quantity={item.quantity} />
                   </div>
-                  <div className="grid grid-cols-3 gap-2 mt-3">
+                  <div className="grid grid-cols-2 gap-2 mt-3">
                     <button onClick={() => openAdjust(item, "add")} className="btn-secondary text-xs px-1">
                       Add
                     </button>
@@ -210,8 +330,13 @@ export default function AdminStockPage() {
                     >
                       Sale
                     </button>
-                    <button onClick={() => { setSelectedItem(item); setShowMove(true); setError(""); }} className="btn-secondary text-xs px-1">
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <button onClick={() => openMove(item)} className="btn-secondary text-xs px-1">
                       Move
+                    </button>
+                    <button onClick={() => openEdit(item)} className="btn-secondary text-xs px-1">
+                      Edit
                     </button>
                   </div>
                   <button onClick={() => handleDelete(item)} className="btn-danger w-full text-xs mt-2">Delete</button>
@@ -237,21 +362,28 @@ export default function AdminStockPage() {
                       <td className="px-5 py-4 text-slate-600">{item.party_name || "—"}</td>
                       <td className="px-5 py-4 text-slate-600">{item.warehouse_name}</td>
                       <td className="px-5 py-4"><QuantityBadge quantity={item.quantity} /></td>
-                      <td className="px-5 py-4 text-right space-x-2 whitespace-nowrap">
-                        <button onClick={() => openAdjust(item, "add")} className="btn-secondary text-xs py-2 min-h-0">
-                          Add
-                        </button>
-                        <button
-                          onClick={() => openAdjust(item, "deduct")}
-                          className="btn-secondary text-xs py-2 min-h-0"
-                          disabled={item.quantity === 0}
-                        >
-                          Sale
-                        </button>
-                        <button onClick={() => { setSelectedItem(item); setShowMove(true); setError(""); }} className="btn-secondary text-xs py-2 min-h-0">
-                          Move
-                        </button>
-                        <button onClick={() => handleDelete(item)} className="btn-danger text-xs py-2 min-h-0">Delete</button>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-wrap justify-end gap-1.5">
+                          <button onClick={() => openAdjust(item, "add")} className="btn-secondary text-xs py-1.5 px-2.5 min-h-0">
+                            Add
+                          </button>
+                          <button
+                            onClick={() => openAdjust(item, "deduct")}
+                            className="btn-secondary text-xs py-1.5 px-2.5 min-h-0"
+                            disabled={item.quantity === 0}
+                          >
+                            Sale
+                          </button>
+                          <button onClick={() => openMove(item)} className="btn-secondary text-xs py-1.5 px-2.5 min-h-0">
+                            Move
+                          </button>
+                          <button onClick={() => openEdit(item)} className="btn-secondary text-xs py-1.5 px-2.5 min-h-0">
+                            Edit
+                          </button>
+                          <button onClick={() => handleDelete(item)} className="btn-danger text-xs py-1.5 px-2.5 min-h-0">
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -297,8 +429,8 @@ export default function AdminStockPage() {
         onClose={() => setShowAdjust(false)}
         title={adjustType === "add" ? "Add Stock" : "Record Sale"}
       >
-        {selectedItem && (
-          <form onSubmit={handleAdjust} className="space-y-4">
+        {selectedItem && adjustStep === "form" && (
+          <form onSubmit={reviewAdjust} className="space-y-4">
             {error && <Alert type="error" message={error} />}
             <div className="p-3 rounded-xl bg-slate-50 text-sm">
               <p><span className="text-slate-500">Item:</span> <strong>{selectedItem.name}</strong></p>
@@ -347,16 +479,41 @@ export default function AdminStockPage() {
               />
             </div>
 
-            <button type="submit" className="btn-primary w-full" disabled={submitting}>
-              {submitting ? "Saving..." : adjustType === "add" ? "Add Stock" : "Record Sale"}
+            <button type="submit" className="btn-primary w-full">
+              Review
             </button>
           </form>
+        )}
+
+        {selectedItem && adjustStep === "confirm" && (
+          <>
+            {error && <div className="mb-4"><Alert type="error" message={error} /></div>}
+            <ConfirmSummary
+              submitting={submitting}
+              onBack={() => setAdjustStep("form")}
+              onConfirm={confirmAdjust}
+              confirmLabel={adjustType === "add" ? "Confirm & Add" : "Confirm & Record Sale"}
+              rows={[
+                { label: "Item", value: selectedItem.name },
+                { label: "Warehouse", value: selectedItem.warehouse_name },
+                { label: "Party", value: adjustParty || "—" },
+                { label: "Quantity", value: `${adjustType === "add" ? "+" : "-"}${adjustAmount || 0}` },
+                {
+                  label: "New stock",
+                  value:
+                    adjustType === "add"
+                      ? selectedItem.quantity + (parseInt(adjustAmount, 10) || 0)
+                      : selectedItem.quantity - (parseInt(adjustAmount, 10) || 0),
+                },
+              ]}
+            />
+          </>
         )}
       </Modal>
 
       <Modal open={showMove} onClose={() => setShowMove(false)} title="Move Stock">
-        {selectedItem && (
-          <form onSubmit={handleMove} className="space-y-4">
+        {selectedItem && moveStep === "form" && (
+          <form onSubmit={reviewMove} className="space-y-4">
             {error && <Alert type="error" message={error} />}
             <div className="p-3 rounded-xl bg-slate-50 text-sm">
               <p><span className="text-slate-500">Item:</span> <strong>{selectedItem.name}</strong></p>
@@ -376,10 +533,80 @@ export default function AdminStockPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Quantity</label>
               <input type="number" min="1" max={selectedItem.quantity} className="input" value={moveQty} onChange={(e) => setMoveQty(e.target.value)} required />
             </div>
-            <button type="submit" className="btn-primary w-full" disabled={submitting}>
-              {submitting ? "Moving..." : "Move Stock"}
+            <button type="submit" className="btn-primary w-full">
+              Review
             </button>
           </form>
+        )}
+
+        {selectedItem && moveStep === "confirm" && (
+          <>
+            {error && <div className="mb-4"><Alert type="error" message={error} /></div>}
+            <ConfirmSummary
+              submitting={submitting}
+              onBack={() => setMoveStep("form")}
+              onConfirm={confirmMove}
+              confirmLabel="Confirm & Move"
+              rows={[
+                { label: "Item", value: selectedItem.name },
+                { label: "From", value: selectedItem.warehouse_name },
+                { label: "To", value: moveToName },
+                { label: "Quantity", value: moveQty || 0 },
+                { label: `Remaining in ${selectedItem.warehouse_name}`, value: selectedItem.quantity - (parseInt(moveQty, 10) || 0) },
+              ]}
+            />
+          </>
+        )}
+      </Modal>
+
+      <Modal open={showEdit} onClose={() => setShowEdit(false)} title="Edit Stock Quantity">
+        {selectedItem && editStep === "form" && (
+          <form onSubmit={reviewEdit} className="space-y-4">
+            {error && <Alert type="error" message={error} />}
+            <div className="p-3 rounded-xl bg-slate-50 text-sm">
+              <p><span className="text-slate-500">Item:</span> <strong>{selectedItem.name}</strong></p>
+              <p><span className="text-slate-500">Warehouse:</span> {selectedItem.warehouse_name}</p>
+              <p><span className="text-slate-500">Current stock:</span> <span className="font-mono">{selectedItem.quantity}</span></p>
+            </div>
+            <p className="text-xs text-slate-500">
+              Use this to correct a miscount. It sets the exact quantity and
+              won't be logged as a sale or purchase.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">New Quantity</label>
+              <input
+                type="number"
+                min="0"
+                className="input text-lg text-center font-mono font-bold"
+                value={editQty}
+                onChange={(e) => setEditQty(e.target.value)}
+                required
+                autoFocus
+              />
+            </div>
+            <button type="submit" className="btn-primary w-full">
+              Review
+            </button>
+          </form>
+        )}
+
+        {selectedItem && editStep === "confirm" && (
+          <>
+            {error && <div className="mb-4"><Alert type="error" message={error} /></div>}
+            <ConfirmSummary
+              submitting={submitting}
+              onBack={() => setEditStep("form")}
+              onConfirm={confirmEdit}
+              confirmLabel="Confirm & Update"
+              rows={[
+                { label: "Item", value: selectedItem.name },
+                { label: "Warehouse", value: selectedItem.warehouse_name },
+                { label: "Current stock", value: selectedItem.quantity },
+                { label: "New stock", value: editQty },
+                { label: "Change", value: `${editDelta > 0 ? "+" : ""}${editDelta}` },
+              ]}
+            />
+          </>
         )}
       </Modal>
     </>

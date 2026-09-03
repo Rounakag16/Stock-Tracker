@@ -122,6 +122,7 @@ const ACTION_LABELS = {
   delete_item: { text: "Deleted", color: "bg-red-100 text-red-700" },
   add_quantity: { text: "Added", color: "bg-emerald-100 text-emerald-700" },
   deduct_quantity: { text: "Sale", color: "bg-orange-100 text-orange-700" },
+  edit_quantity: { text: "Edited Qty", color: "bg-amber-100 text-amber-700" },
   transfer_out: { text: "Moved Out", color: "bg-purple-100 text-purple-700" },
   transfer_in: { text: "Moved In", color: "bg-indigo-100 text-indigo-700" },
   create_warehouse: { text: "New Warehouse", color: "bg-teal-100 text-teal-700" },
