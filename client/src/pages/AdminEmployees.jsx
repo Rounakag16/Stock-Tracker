@@ -1,15 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { Modal, Alert, LoadingSpinner, EmptyState, PasswordInput } from "../components/ui";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
-import { get, post, del } from "../lib/api";
+import { get, post } from "../lib/api";
 
 export default function AdminEmployeesPage() {
-  const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [companySlug, setCompanySlug] = useState("");
-  const [companyName, setCompanyName] = useState("");
 
   const [showCreate, setShowCreate] = useState(false);
   const [newUsername, setNewUsername] = useState("");
@@ -21,11 +17,6 @@ export default function AdminEmployeesPage() {
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const [showDeleteCompany, setShowDeleteCompany] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [deleteError, setDeleteError] = useState("");
-  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
-
   const loadData = useCallback(async () => {
     const { data } = await get("/users");
     setEmployees(data.employees || []);
@@ -35,13 +26,6 @@ export default function AdminEmployeesPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  useEffect(() => {
-    get("/company").then(({ data }) => {
-      setCompanySlug(data.company?.slug || "");
-      setCompanyName(data.company?.name || "");
-    });
-  }, []);
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -63,21 +47,6 @@ export default function AdminEmployeesPage() {
     loadData();
   }
 
-  async function handleDeleteCompany() {
-    setDeleteError("");
-    setDeleteSubmitting(true);
-
-    const { ok, data } = await del("/company", { confirmCompanyName: deleteConfirmText });
-    setDeleteSubmitting(false);
-
-    if (!ok) {
-      setDeleteError(data.error);
-      return;
-    }
-
-    navigate("/", { replace: true });
-  }
-
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -95,18 +64,6 @@ export default function AdminEmployeesPage() {
             New Employee
           </button>
         </div>
-
-        {companySlug && (
-          <div className="card p-4 mb-4 flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <p className="text-xs text-slate-500">Company Code — employees need this to sign in</p>
-              <p className="text-lg font-mono font-bold text-brand-600 tracking-wide">{companySlug}</p>
-            </div>
-            <button onClick={() => navigator.clipboard?.writeText(companySlug)} className="btn-secondary text-sm">
-              Copy
-            </button>
-          </div>
-        )}
 
         {success && <div className="mb-4"><Alert type="success" message={success} onDismiss={() => setSuccess("")} /></div>}
 
@@ -132,20 +89,6 @@ export default function AdminEmployeesPage() {
             ))}
           </div>
         )}
-
-        <div className="mt-10 card p-4 sm:p-5 border-red-200 bg-red-50/40">
-          <h2 className="font-bold text-red-700">Danger Zone</h2>
-          <p className="text-sm text-slate-600 mt-1 mb-4">
-            Permanently delete this company's account. This removes every employee, warehouse, stock item,
-            request, and activity log — for everyone. This cannot be undone.
-          </p>
-          <button
-            onClick={() => { setShowDeleteCompany(true); setDeleteConfirmText(""); setDeleteError(""); }}
-            className="btn-danger text-sm"
-          >
-            Delete Company Account
-          </button>
-        </div>
       </div>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Create Employee">
@@ -179,35 +122,6 @@ export default function AdminEmployeesPage() {
           resetUsername={resetTarget.username}
         />
       )}
-
-      <Modal open={showDeleteCompany} onClose={() => setShowDeleteCompany(false)} title="Delete Company Account">
-        <div className="space-y-4">
-          {deleteError && <Alert type="error" message={deleteError} />}
-          <Alert
-            type="error"
-            message={`This will permanently delete "${companyName}" and everything in it — every employee account, warehouse, stock item, request, and log. There is no undo.`}
-          />
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Type <span className="font-mono font-bold">{companyName}</span> to confirm
-            </label>
-            <input
-              className="input"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder={companyName}
-              autoComplete="off"
-            />
-          </div>
-          <button
-            onClick={handleDeleteCompany}
-            className="btn-danger w-full"
-            disabled={deleteSubmitting || deleteConfirmText !== companyName}
-          >
-            {deleteSubmitting ? "Deleting..." : "Permanently Delete Company"}
-          </button>
-        </div>
-      </Modal>
     </>
   );
 }

@@ -14,6 +14,7 @@ function actionWord(type) {
 const ACTIVITY_ACTION_LABELS = {
   create_item: "Created",
   delete_item: "Deleted",
+  edit_item: "Edited Item",
   add_quantity: "Added",
   deduct_quantity: "Sale",
   edit_quantity: "Edited Qty",
@@ -21,6 +22,7 @@ const ACTIVITY_ACTION_LABELS = {
   transfer_in: "Moved In",
   create_warehouse: "New Warehouse",
   delete_warehouse: "Deleted Warehouse",
+  rename_warehouse: "Renamed Warehouse",
   create_employee: "New Employee",
   change_password: "Password Changed",
   request_submitted: "Requested",

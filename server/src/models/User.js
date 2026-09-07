@@ -5,6 +5,10 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, trim: true },
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ["admin", "employee"], required: true },
+  // Password recovery: a hashed, single-use, expiring token. Never store
+  // the raw token — only its hash, same principle as the password itself.
+  resetTokenHash: { type: String, default: null },
+  resetTokenExpires: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

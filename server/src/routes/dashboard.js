@@ -4,6 +4,7 @@ const Warehouse = require("../models/Warehouse");
 const ActivityLog = require("../models/ActivityLog");
 const StockRequest = require("../models/StockRequest");
 const { requireAuth } = require("../middleware/auth");
+const { isLowStock } = require("../lib/lowStock");
 const { asyncHandler } = require("../lib/asyncHandler");
 
 const router = express.Router();
@@ -14,15 +15,11 @@ router.get(
   asyncHandler(async (req, res) => {
     const companyId = req.session.companyId;
 
-    const [allItems, warehouses, warehouseCount, lowStockDocs, recentLogs, pendingRequests] =
+    const [allItems, warehouses, warehouseCount, recentLogs, pendingRequests] =
       await Promise.all([
-        StockItem.find({ companyId }),
+        StockItem.find({ companyId }).populate("warehouseId", "name"),
         Warehouse.find({ companyId }).sort({ name: 1 }),
         Warehouse.countDocuments({ companyId }),
-        StockItem.find({ companyId, quantity: { $lte: 10 } })
-          .sort({ quantity: 1 })
-          .limit(10)
-          .populate("warehouseId", "name"),
         ActivityLog.find({ companyId })
           .sort({ createdAt: -1 })
           .limit(5)
@@ -34,8 +31,16 @@ router.get(
     const totalItems = allItems.length;
     const totalQuantity = allItems.reduce((sum, i) => sum + i.quantity, 0);
 
+    // Per-item thresholds mean this can't be a simple $lte query — each
+    // item may carry its own reorder point, falling back to the shared
+    // default (see lib/lowStock.js) when unset.
+    const lowStockDocs = allItems
+      .filter(isLowStock)
+      .sort((a, b) => a.quantity - b.quantity)
+      .slice(0, 10);
+
     const byWarehouse = warehouses.map((w) => {
-      const items = allItems.filter((i) => String(i.warehouseId) === String(w._id));
+      const items = allItems.filter((i) => String(i.warehouseId?._id || i.warehouseId) === String(w._id));
       return {
         name: w.name,
         item_count: items.length,

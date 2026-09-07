@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChangePasswordModal } from "./ChangePasswordModal";
+import { NotificationBell } from "./NotificationBell";
 import { del } from "../lib/api";
 
 const adminLinks = [
@@ -10,6 +11,7 @@ const adminLinks = [
   { href: "/admin/warehouses", label: "Warehouses", icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
   { href: "/admin/employees", label: "Team", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
   { href: "/admin/logs", label: "Logs", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
+  { href: "/admin/settings", label: "Settings", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" },
 ];
 
 export function AdminNav({ username, companyName }) {
@@ -27,16 +29,19 @@ export function AdminNav({ username, companyName }) {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 bg-white border-r border-line">
         <div className="p-6 border-b border-line">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center">
-              <svg className="w-5 h-5 text-paper" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-paper" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h1 className="font-display font-bold text-ink truncate">{companyName || "Stock Tracker"}</h1>
+                <p className="text-xs text-slate-500">Admin Portal</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="font-display font-bold text-ink truncate">{companyName || "Stock Tracker"}</h1>
-              <p className="text-xs text-slate-500">Admin Portal</p>
-            </div>
+            <NotificationBell />
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-1">
@@ -103,11 +108,12 @@ export function AdminNav({ username, companyName }) {
             </div>
             <span className="font-display font-bold text-ink">Admin</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowPassword(true)} className="text-sm text-slate-600 font-medium px-3 py-1.5">
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <button onClick={() => setShowPassword(true)} className="text-sm text-slate-600 font-medium px-2 py-1.5">
               Password
             </button>
-            <button onClick={logout} className="text-sm text-red-600 font-medium px-3 py-1.5">
+            <button onClick={logout} className="text-sm text-red-600 font-medium px-2 py-1.5">
               Sign out
             </button>
           </div>
@@ -144,6 +150,7 @@ export function EmployeeNav({ username, companyName }) {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <NotificationBell />
             <button onClick={() => setShowPassword(true)} className="text-sm text-slate-600 font-medium px-2 py-1.5">
               Password
             </button>

@@ -8,6 +8,7 @@ async function logActivity({
   companyId,
   userId,
   warehouseId = null,
+  itemId = null,
   itemName,
   action,
   quantityBefore = null,
@@ -19,6 +20,7 @@ async function logActivity({
     companyId,
     userId,
     warehouseId,
+    itemId,
     itemName,
     action,
     quantityBefore,
@@ -84,6 +86,7 @@ async function applyStockAdjust({ companyId, itemId, type, qty, userId, partyNam
     companyId,
     userId,
     warehouseId: item.warehouseId,
+    itemId: item._id,
     itemName: item.name,
     action: actionLabel,
     quantityBefore: before,
@@ -146,6 +149,8 @@ async function applyStockMove({
       name: sourceItem.name,
       quantity: qty,
       partyName: sourceItem.partyName || null,
+      category: sourceItem.category || null,
+      lowStockThreshold: sourceItem.lowStockThreshold ?? null,
     });
     destAfter = qty;
   }
@@ -156,6 +161,7 @@ async function applyStockMove({
     companyId,
     userId,
     warehouseId: fromWarehouseId,
+    itemId: sourceItem._id,
     itemName: sourceItem.name,
     action: "transfer_out",
     quantityBefore: sourceItem.quantity,
@@ -168,6 +174,7 @@ async function applyStockMove({
     companyId,
     userId,
     warehouseId: toWarehouseId,
+    itemId: destItem._id,
     itemName: sourceItem.name,
     action: "transfer_in",
     quantityBefore: destBefore,

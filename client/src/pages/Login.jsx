@@ -101,6 +101,17 @@ export default function LoginPage() {
             <button type="submit" className="btn-primary w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </button>
+
+            {/* Password recovery exists in the codebase (ForgotPassword.jsx,
+                ResetPassword.jsx, server/src/routes/auth.js) but isn't wired
+                up to a real email service — it currently just logs the
+                reset link to the server console, which doesn't work for an
+                actual deployed user. Hidden until that's connected to real
+                SMTP delivery. See the matching commented-out routes below
+                and in App.jsx. */}
+            {/* <Link to="/forgot-password" className="block text-center text-sm text-slate-500 hover:text-slate-700">
+              Forgot password?
+            </Link> */}
           </form>
 
           <p className="text-center text-sm text-slate-500 mt-4">

@@ -1,12 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { Modal, Alert, LoadingSpinner, EmptyState } from "../components/ui";
-import { get, post, del } from "../lib/api";
+import { get, post, patch, del } from "../lib/api";
 
 export default function AdminWarehousesPage() {
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
+
+  const [renameTarget, setRenameTarget] = useState(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameError, setRenameError] = useState("");
+  const [renaming, setRenaming] = useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -37,6 +43,31 @@ export default function AdminWarehousesPage() {
     setSuccess("Warehouse created");
     setShowAdd(false);
     setNewName("");
+    loadData();
+  }
+
+  function openRename(warehouse) {
+    setRenameTarget(warehouse);
+    setRenameValue(warehouse.name);
+    setRenameError("");
+  }
+
+  async function handleRename(e) {
+    e.preventDefault();
+    setRenameError("");
+    if (!renameValue.trim()) return;
+
+    setRenaming(true);
+    const { ok, data } = await patch(`/warehouses/${renameTarget.id}`, { name: renameValue.trim() });
+    setRenaming(false);
+
+    if (!ok) {
+      setRenameError(data.error);
+      return;
+    }
+
+    setSuccess("Warehouse renamed");
+    setRenameTarget(null);
     loadData();
   }
 
@@ -90,14 +121,34 @@ export default function AdminWarehousesPage() {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => handleDelete(wh)} className="btn-danger w-full mt-4 text-sm">
-                  Delete
-                </button>
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  <button onClick={() => openRename(wh)} className="btn-secondary text-sm">
+                    Rename
+                  </button>
+                  <button onClick={() => handleDelete(wh)} className="btn-danger text-sm">
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <Modal open={!!renameTarget} onClose={() => setRenameTarget(null)} title="Rename Warehouse">
+        {renameTarget && (
+          <form onSubmit={handleRename} className="space-y-4">
+            {renameError && <Alert type="error" message={renameError} />}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Warehouse Name</label>
+              <input className="input" value={renameValue} onChange={(e) => setRenameValue(e.target.value)} required autoFocus />
+            </div>
+            <button type="submit" className="btn-primary w-full" disabled={renaming || !renameValue.trim()}>
+              {renaming ? "Saving..." : "Save"}
+            </button>
+          </form>
+        )}
+      </Modal>
 
       <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add Warehouse">
         <form onSubmit={handleAdd} className="space-y-4">

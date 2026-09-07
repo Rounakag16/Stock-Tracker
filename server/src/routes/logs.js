@@ -46,6 +46,10 @@ function buildFilter(companyId, query) {
     if (list.length > 0) filter.action = { $in: list };
   }
 
+  if (query.itemId) {
+    filter.itemId = query.itemId;
+  }
+
   return filter;
 }
 

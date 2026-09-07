@@ -5,6 +5,7 @@ const Warehouse = require("../models/Warehouse");
 const User = require("../models/User");
 const { requireAuth } = require("../middleware/auth");
 const { applyStockAdjust, applyStockMove, logActivity } = require("../lib/stockOps");
+const { notifyAdmins, notifyUser } = require("../lib/notify");
 const { actionWord } = require("../lib/labels");
 const { asyncHandler } = require("../lib/asyncHandler");
 
@@ -117,10 +118,19 @@ router.post(
       companyId: req.session.companyId,
       userId: req.session.userId,
       warehouseId: item.warehouseId,
+      itemId: item._id,
       itemName: item.name,
       action: "request_submitted",
       quantityChange: type === "deduct" || type === "move" ? -qty : qty,
       details: `Submitted ${actionWord(type)} request for ${qty} of "${item.name}" — Party: ${party}`,
+    });
+
+    await notifyAdmins({
+      companyId: req.session.companyId,
+      type: "request_submitted",
+      title: `New ${actionWord(type)} request from ${req.session.username}`,
+      message: `${qty} of "${item.name}" — Party: ${party}`,
+      link: "/admin/requests",
     });
 
     return res.json({ request: { id: request._id, status: "pending" } });
@@ -262,9 +272,19 @@ router.post(
         companyId: req.session.companyId,
         userId: req.session.userId,
         warehouseId: reqDoc.fromWarehouseId,
+        itemId: reqDoc.itemId,
         itemName,
         action: "request_denied",
         details: `Denied ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})${note ? ` — ${note}` : ""}`,
+      });
+
+      await notifyUser({
+        companyId: req.session.companyId,
+        userId: reqDoc.userId,
+        type: "request_denied",
+        title: `Your ${actionWord(reqDoc.action)} request was denied`,
+        message: `${reqDoc.quantity} of "${itemName}"${note ? ` — ${note}` : ""}`,
+        link: "/employee",
       });
 
       return res.json({ success: true, status: "denied" });
@@ -308,11 +328,21 @@ router.post(
       companyId: req.session.companyId,
       userId: req.session.userId,
       warehouseId: reqDoc.fromWarehouseId,
+      itemId: reqDoc.itemId,
       itemName,
       action: "request_approved",
       quantityChange:
         reqDoc.action === "deduct" || reqDoc.action === "move" ? -reqDoc.quantity : reqDoc.quantity,
       details: `Approved ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})`,
+    });
+
+    await notifyUser({
+      companyId: req.session.companyId,
+      userId: reqDoc.userId,
+      type: "request_approved",
+      title: `Your ${actionWord(reqDoc.action)} request was approved`,
+      message: `${reqDoc.quantity} of "${itemName}"`,
+      link: "/employee",
     });
 
     return res.json({ success: true, status: "approved" });

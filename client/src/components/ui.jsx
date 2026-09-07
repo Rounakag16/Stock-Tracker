@@ -102,11 +102,12 @@ export function EmptyState({ title, description }) {
   );
 }
 
-export function QuantityBadge({ quantity }) {
+export function QuantityBadge({ quantity, threshold }) {
+  const effectiveThreshold = threshold ?? 10;
   const color =
     quantity === 0
       ? "bg-red-100 text-red-700"
-      : quantity <= 10
+      : quantity <= effectiveThreshold
         ? "bg-amber-100 text-amber-700"
         : "bg-emerald-100 text-emerald-700";
 
@@ -120,6 +121,7 @@ export function QuantityBadge({ quantity }) {
 const ACTION_LABELS = {
   create_item: { text: "Created", color: "bg-blue-100 text-blue-700" },
   delete_item: { text: "Deleted", color: "bg-red-100 text-red-700" },
+  edit_item: { text: "Edited Item", color: "bg-sky-100 text-sky-700" },
   add_quantity: { text: "Added", color: "bg-emerald-100 text-emerald-700" },
   deduct_quantity: { text: "Sale", color: "bg-orange-100 text-orange-700" },
   edit_quantity: { text: "Edited Qty", color: "bg-amber-100 text-amber-700" },
@@ -127,6 +129,7 @@ const ACTION_LABELS = {
   transfer_in: { text: "Moved In", color: "bg-indigo-100 text-indigo-700" },
   create_warehouse: { text: "New Warehouse", color: "bg-teal-100 text-teal-700" },
   delete_warehouse: { text: "Del Warehouse", color: "bg-red-100 text-red-700" },
+  rename_warehouse: { text: "Renamed Warehouse", color: "bg-teal-100 text-teal-700" },
   create_employee: { text: "New Employee", color: "bg-cyan-100 text-cyan-700" },
   change_password: { text: "Password", color: "bg-slate-100 text-slate-700" },
   request_submitted: { text: "Requested", color: "bg-yellow-100 text-yellow-800" },

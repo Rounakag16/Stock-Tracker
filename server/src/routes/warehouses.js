@@ -49,6 +49,49 @@ router.post(
   })
 );
 
+router.patch(
+  "/:id",
+  requireAuth(["admin"]),
+  asyncHandler(async (req, res) => {
+    const { name } = req.body;
+    if (!name?.trim()) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+    const trimmed = name.trim();
+
+    const warehouse = await Warehouse.findOne({ _id: req.params.id, companyId: req.session.companyId });
+    if (!warehouse) {
+      return res.status(404).json({ error: "Warehouse not found" });
+    }
+
+    const oldName = warehouse.name;
+    if (oldName === trimmed) {
+      return res.json({ warehouse: { id: warehouse._id, name: warehouse.name } });
+    }
+
+    warehouse.name = trimmed;
+    try {
+      await warehouse.save();
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(409).json({ error: "Warehouse name already exists" });
+      }
+      throw err;
+    }
+
+    await logActivity({
+      companyId: req.session.companyId,
+      userId: req.session.userId,
+      warehouseId: warehouse._id,
+      itemName: trimmed,
+      action: "rename_warehouse",
+      details: `Renamed warehouse "${oldName}" to "${trimmed}"`,
+    });
+
+    return res.json({ warehouse: { id: warehouse._id, name: warehouse.name } });
+  })
+);
+
 router.delete(
   "/:id",
   requireAuth(["admin"]),

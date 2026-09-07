@@ -22,6 +22,29 @@ router.get(
   })
 );
 
+// PATCH /api/company — renames the company. Deliberately does not touch
+// the slug/company code: employees already have that code memorized or
+// written down, and changing it would lock them out until re-shared.
+router.patch(
+  "/",
+  requireAuth(["admin"]),
+  asyncHandler(async (req, res) => {
+    const { name } = req.body;
+    if (!name?.trim()) {
+      return res.status(400).json({ error: "Company name is required" });
+    }
+    const trimmed = name.trim();
+
+    const company = await Company.findById(req.session.companyId);
+    if (!company) return res.status(404).json({ error: "Company not found" });
+
+    company.name = trimmed;
+    await company.save();
+
+    return res.json({ company: { name: company.name, slug: company.slug } });
+  })
+);
+
 // DELETE /api/company — permanently deletes the entire company and every
 // document that belongs to it (users, warehouses, stock, requests, logs).
 // Irreversible. Requires the admin to re-type the exact company name as a

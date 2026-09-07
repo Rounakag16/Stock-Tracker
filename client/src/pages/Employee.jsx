@@ -277,7 +277,7 @@ export default function EmployeePage() {
                         <h3 className="font-semibold text-slate-900 text-lg">{item.name}</h3>
                         {item.party_name && <p className="text-sm text-slate-500">Party: {item.party_name}</p>}
                       </div>
-                      <QuantityBadge quantity={item.quantity} />
+                      <QuantityBadge quantity={item.quantity} threshold={item.low_stock_threshold} />
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       <button onClick={() => openRequest(item, "add")} className="btn-success text-sm">Add</button>
