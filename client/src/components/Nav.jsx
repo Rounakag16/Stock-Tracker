@@ -7,6 +7,7 @@ import { del } from "../lib/api";
 const adminLinks = [
   { href: "/admin", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
   { href: "/admin/stock", label: "Stock", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
+  { href: "/admin/tags", label: "Tags", icon: "M7 7h.01M7 3h5.586a1 1 0 01.707.293l7.414 7.414a1 1 0 010 1.414l-7.586 7.586a1 1 0 01-1.414 0L4.293 12.293A1 1 0 014 11.586V6a3 3 0 013-3z" },
   { href: "/admin/requests", label: "Requests", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
   { href: "/admin/warehouses", label: "Warehouses", icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
   { href: "/admin/employees", label: "Team", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
@@ -76,14 +77,14 @@ export function AdminNav({ username, companyName }) {
 
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-line z-40">
-        <div className="flex items-center justify-around px-2 py-2">
+        <div className="flex items-center gap-1 px-2 py-2 overflow-x-auto">
           {adminLinks.map((link) => {
             const active = location.pathname === link.href;
             return (
               <Link
                 key={link.href}
                 to={link.href}
-                className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[64px] ${
+                className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-[64px] shrink-0 ${
                   active ? "text-brand-600" : "text-slate-500"
                 }`}
               >

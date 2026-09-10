@@ -91,10 +91,17 @@ function ActionsMenu({ actions }) {
   );
 }
 
+// Light tinted background from a hex color, matching the same helper used
+// on the Tags page — keeps a tag's color consistent everywhere it shows up.
+function tint(hex, alpha) {
+  const a = Math.round(alpha * 255).toString(16).padStart(2, "0");
+  return `${hex}${a}`;
+}
+
 export default function AdminStockPage() {
   const [items, setItems] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
-  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterWarehouse, setFilterWarehouse] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -145,10 +152,10 @@ export default function AdminStockPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [stockRes, whRes, catRes] = await Promise.all([get("/stock"), get("/warehouses"), get("/categories")]);
+    const [stockRes, whRes, tagsRes] = await Promise.all([get("/stock"), get("/warehouses"), get("/tags")]);
     setItems(stockRes.data.items || []);
     setWarehouses(whRes.data.warehouses || []);
-    setCategoryOptions(catRes.data.categories || []);
+    setTags(tagsRes.data.tags || []);
     setLoading(false);
   }, []);
 
@@ -156,7 +163,7 @@ export default function AdminStockPage() {
     loadData();
   }, [loadData]);
 
-  const categories = [...new Set(items.map((i) => i.category).filter(Boolean))].sort();
+  const tagColor = (name) => tags.find((t) => t.name === name)?.color || "#64748b";
 
   const filtered = items.filter((item) => {
     const matchWarehouse = !filterWarehouse || String(item.warehouse_id) === filterWarehouse;
@@ -464,11 +471,11 @@ export default function AdminStockPage() {
               <option key={wh.id} value={wh.id}>{wh.name}</option>
             ))}
           </select>
-          {categories.length > 0 && (
+          {tags.length > 0 && (
             <select className="select sm:w-48" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
-              <option value="">All categories</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
+              <option value="">All tags</option>
+              {tags.map((t) => (
+                <option key={t.id} value={t.name}>{t.name}</option>
               ))}
             </select>
           )}
@@ -486,7 +493,10 @@ export default function AdminStockPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-slate-900 truncate">{item.name}</h3>
                         {item.category && (
-                          <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                          <span
+                            className="text-[11px] font-semibold px-1.5 py-0.5 rounded"
+                            style={{ backgroundColor: tint(tagColor(item.category), 0.14), color: tagColor(item.category) }}
+                          >
                             {item.category}
                           </span>
                         )}
@@ -537,7 +547,10 @@ export default function AdminStockPage() {
                       <td className="px-5 py-4 font-medium text-slate-900">
                         {item.name}
                         {item.category && (
-                          <span className="ml-2 text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                          <span
+                            className="ml-2 text-[11px] font-semibold px-1.5 py-0.5 rounded"
+                            style={{ backgroundColor: tint(tagColor(item.category), 0.14), color: tagColor(item.category) }}
+                          >
                             {item.category}
                           </span>
                         )}
@@ -594,16 +607,16 @@ export default function AdminStockPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Category</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Tag</label>
               <select className="select" value={newCategory} onChange={(e) => setNewCategory(e.target.value)}>
-                <option value="">No category</option>
-                {categoryOptions.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
+                <option value="">No tag</option>
+                {tags.map((t) => (
+                  <option key={t.id} value={t.name}>{t.name}</option>
                 ))}
               </select>
-              {categoryOptions.length === 0 && (
+              {tags.length === 0 && (
                 <p className="text-xs text-slate-400 mt-1">
-                  No tags yet — add some in <Link to="/admin/settings" className="underline">Settings</Link>.
+                  No tags yet — add some in <Link to="/admin/tags" className="underline">Tags</Link>.
                 </p>
               )}
             </div>
@@ -771,13 +784,13 @@ export default function AdminStockPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Category</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Tag</label>
                 <select className="select" value={editCategory} onChange={(e) => setEditCategory(e.target.value)}>
-                  <option value="">No category</option>
-                  {categoryOptions.map((c) => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
+                  <option value="">No tag</option>
+                  {tags.map((t) => (
+                    <option key={t.id} value={t.name}>{t.name}</option>
                   ))}
-                  {editCategory && !categoryOptions.some((c) => c.name === editCategory) && (
+                  {editCategory && !tags.some((t) => t.name === editCategory) && (
                     <option value={editCategory}>{editCategory} (no longer in your tag list)</option>
                   )}
                 </select>
@@ -821,7 +834,7 @@ export default function AdminStockPage() {
               confirmLabel="Confirm & Update"
               rows={[
                 { label: "Name", value: editName },
-                { label: "Category", value: editCategory || "—" },
+                { label: "Tag", value: editCategory || "—" },
                 { label: "Party", value: editParty || "—" },
                 { label: "Low stock at", value: editThreshold === "" ? "Default (10)" : editThreshold },
                 { label: "Quantity", value: `${selectedItem.quantity} → ${editQty}${editDelta !== 0 ? ` (${editDelta > 0 ? "+" : ""}${editDelta})` : ""}` },
@@ -868,7 +881,7 @@ export default function AdminStockPage() {
           )}
           <p className="text-xs text-slate-500">
             Columns: <span className="font-mono">Item, Warehouse, Quantity</span>, and optionally{" "}
-            <span className="font-mono">Category, Party, Low Stock Threshold</span>. Warehouse must match an
+            <span className="font-mono">Tag, Party, Low Stock Threshold</span>. Warehouse must match an
             existing warehouse name exactly.
           </p>
           <div>

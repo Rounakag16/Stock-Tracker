@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert, LoadingSpinner } from "../components/ui";
-import { get, patch, post, del } from "../lib/api";
+import { get, patch, del } from "../lib/api";
 
 export default function AdminSettingsPage() {
   const [company, setCompany] = useState(null);
@@ -13,11 +13,6 @@ export default function AdminSettingsPage() {
   const [nameSuccess, setNameSuccess] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const [categories, setCategories] = useState([]);
-  const [newCategory, setNewCategory] = useState("");
-  const [categoryError, setCategoryError] = useState("");
-  const [addingCategory, setAddingCategory] = useState(false);
-
   const [confirmName, setConfirmName] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -25,42 +20,14 @@ export default function AdminSettingsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    Promise.all([get("/company"), get("/categories")]).then(([companyRes, categoriesRes]) => {
-      if (companyRes.ok) {
-        setCompany(companyRes.data.company);
-        setName(companyRes.data.company.name);
-      }
-      if (categoriesRes.ok) {
-        setCategories(categoriesRes.data.categories || []);
+    get("/company").then(({ ok, data }) => {
+      if (ok) {
+        setCompany(data.company);
+        setName(data.company.name);
       }
       setLoading(false);
     });
   }, []);
-
-  async function handleAddCategory(e) {
-    e.preventDefault();
-    setCategoryError("");
-    if (!newCategory.trim()) return;
-
-    setAddingCategory(true);
-    const { ok, data } = await post("/categories", { name: newCategory.trim() });
-    setAddingCategory(false);
-
-    if (!ok) {
-      setCategoryError(data.error);
-      return;
-    }
-    setCategories((prev) => [...prev, data.category].sort((a, b) => a.name.localeCompare(b.name)));
-    setNewCategory("");
-  }
-
-  async function handleDeleteCategory(category) {
-    if (!confirm(`Remove the "${category.name}" tag? Items already using it keep it — this only removes it from the picker.`)) return;
-    const { ok } = await del(`/categories/${category.id}`);
-    if (ok) {
-      setCategories((prev) => prev.filter((c) => c.id !== category.id));
-    }
-  }
 
   async function handleRename(e) {
     e.preventDefault();
@@ -140,45 +107,6 @@ export default function AdminSettingsPage() {
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
-      </div>
-
-      <div className="card p-5 sm:p-6 mb-6">
-        <h2 className="font-bold text-slate-900 mb-1">Item Categories</h2>
-        <p className="text-sm text-slate-500 mb-4">
-          Create tags here, then pick them from a dropdown when adding or editing stock — no retyping.
-        </p>
-        {categoryError && <div className="mb-3"><Alert type="error" message={categoryError} /></div>}
-
-        {categories.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {categories.map((c) => (
-              <span key={c.id} className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-full bg-slate-100 text-sm font-medium text-slate-700">
-                {c.name}
-                <button
-                  onClick={() => handleDeleteCategory(c)}
-                  className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-slate-200 text-slate-500"
-                  aria-label={`Remove ${c.name}`}
-                >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-
-        <form onSubmit={handleAddCategory} className="flex gap-2">
-          <input
-            className="input flex-1"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            placeholder="e.g. Electronics"
-          />
-          <button type="submit" className="btn-secondary shrink-0" disabled={addingCategory || !newCategory.trim()}>
-            {addingCategory ? "Adding..." : "Add Tag"}
-          </button>
-        </form>
       </div>
 
       <div className="card p-5 sm:p-6 border-red-200">

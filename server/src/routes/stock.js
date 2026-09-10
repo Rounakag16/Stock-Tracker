@@ -300,7 +300,7 @@ router.get(
       .sort({ name: 1 })
       .populate("warehouseId", "name");
 
-    const header = ["Item", "Warehouse", "Quantity", "Category", "Party", "Low Stock Threshold", "Updated"];
+    const header = ["Item", "Warehouse", "Quantity", "Tag", "Party", "Low Stock Threshold", "Updated"];
     const rows = items.map((i) => [
       i.name,
       i.warehouseId?.name || "",
@@ -323,7 +323,7 @@ router.get(
 );
 
 // POST /api/stock/import — bulk-create or update items from CSV text.
-// Expects columns: Item, Warehouse, Quantity, and optionally Category,
+// Expects columns: Item, Warehouse, Quantity, and optionally Tag,
 // Party, Low Stock Threshold. Warehouse is matched by name (case-
 // insensitive) against the company's existing warehouses — it does not
 // create new warehouses, since a typo would otherwise silently spawn one.
@@ -355,7 +355,7 @@ router.post(
       const name = (row.Item || row.item || "").trim();
       const warehouseName = (row.Warehouse || row.warehouse || "").trim();
       const quantityRaw = row.Quantity ?? row.quantity;
-      const category = (row.Category || row.category || "").trim() || null;
+      const category = (row.Tag || row.tag || row.Category || row.category || "").trim() || null;
       const partyName = (row.Party || row.party || "").trim() || null;
       const thresholdRaw = row["Low Stock Threshold"] ?? row.lowStockThreshold;
 
