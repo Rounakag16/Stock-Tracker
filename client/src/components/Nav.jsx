@@ -37,11 +37,11 @@ export function AdminNav({ username, companyName }) {
                 </svg>
               </div>
               <div className="min-w-0">
-                <h1 className="font-display font-bold text-ink truncate">{companyName || "Stock Tracker"}</h1>
+                <h1 className="font-display font-bold text-ink leading-tight break-words">{companyName || "Stock Tracker"}</h1>
                 <p className="text-xs text-slate-500">Admin Portal</p>
               </div>
             </div>
-            <NotificationBell />
+            <NotificationBell align="left" />
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-1">
@@ -109,13 +109,13 @@ export function AdminNav({ username, companyName }) {
             <span className="font-display font-bold text-ink">Admin</span>
           </div>
           <div className="flex items-center gap-1">
-            <NotificationBell />
-            <button onClick={() => setShowPassword(true)} className="text-sm text-slate-600 font-medium px-2 py-1.5">
+            <button onClick={() => setShowPassword(true)} className="text-sm text-slate-600 font-medium px-2 py-1.5 whitespace-nowrap">
               Password
             </button>
-            <button onClick={logout} className="text-sm text-red-600 font-medium px-2 py-1.5">
+            <button onClick={logout} className="text-sm text-red-600 font-medium px-2 py-1.5 whitespace-nowrap">
               Sign out
             </button>
+            <NotificationBell />
           </div>
         </div>
       </header>
@@ -150,13 +150,13 @@ export function EmployeeNav({ username, companyName }) {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <NotificationBell />
-            <button onClick={() => setShowPassword(true)} className="text-sm text-slate-600 font-medium px-2 py-1.5">
+            <button onClick={() => setShowPassword(true)} className="text-sm text-slate-600 font-medium px-2 py-1.5 whitespace-nowrap">
               Password
             </button>
-            <button onClick={logout} className="text-sm text-red-600 font-medium px-2 py-1.5">
+            <button onClick={logout} className="text-sm text-red-600 font-medium px-2 py-1.5 whitespace-nowrap">
               Sign out
             </button>
+            <NotificationBell />
           </div>
         </div>
       </header>

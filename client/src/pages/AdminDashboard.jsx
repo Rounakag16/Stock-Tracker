@@ -90,7 +90,7 @@ export default function AdminDashboard() {
                 <div key={wh.name} className="flex items-center justify-between p-3 lg:p-4 rounded-xl bg-slate-50">
                   <div>
                     <p className="font-medium text-slate-900">{wh.name}</p>
-                    <p className="text-xs text-slate-500">{wh.item_count} items</p>
+                    <p className="text-xs text-slate-500">{wh.item_count} {wh.item_count === 1 ? "item" : "items"}</p>
                   </div>
                   <p className="text-lg lg:text-xl font-mono font-bold text-brand-600 tabular-nums">{wh.total_qty}</p>
                 </div>

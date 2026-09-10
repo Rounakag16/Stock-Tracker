@@ -15,6 +15,7 @@ const passwordRoutes = require("./src/routes/password");
 const dashboardRoutes = require("./src/routes/dashboard");
 const logRoutes = require("./src/routes/logs");
 const notificationRoutes = require("./src/routes/notifications");
+const categoryRoutes = require("./src/routes/categories");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -44,6 +45,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/logs", logRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/categories", categoryRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 

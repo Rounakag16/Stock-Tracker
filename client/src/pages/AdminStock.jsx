@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { Link } from "react-router-dom";
 import { Modal, Alert, LoadingSpinner, EmptyState, QuantityBadge, ActionLabel } from "../components/ui";
 import { get, post, patch, del } from "../lib/api";
 
@@ -37,9 +38,63 @@ function ConfirmSummary({ rows, onBack, onConfirm, confirmLabel, submitting, dan
   );
 }
 
+// Kebab-menu of secondary row actions (Move / Edit / History / Delete),
+// so a row isn't six buttons wide — Add/Sale stay as their own buttons
+// since those are the actions used most often.
+function ActionsMenu({ actions }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  return (
+    <div className="relative inline-block" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-9 h-9 rounded-lg border border-line bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 shrink-0"
+        aria-label="More actions"
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="5" r="1.75" />
+          <circle cx="12" cy="12" r="1.75" />
+          <circle cx="12" cy="19" r="1.75" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1.5 w-44 card p-1 z-30">
+          {actions.map((a) => (
+            <button
+              key={a.label}
+              type="button"
+              disabled={a.disabled}
+              onClick={() => {
+                setOpen(false);
+                a.onClick();
+              }}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                a.danger ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminStockPage() {
   const [items, setItems] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterWarehouse, setFilterWarehouse] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -90,9 +145,10 @@ export default function AdminStockPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [stockRes, whRes] = await Promise.all([get("/stock"), get("/warehouses")]);
+    const [stockRes, whRes, catRes] = await Promise.all([get("/stock"), get("/warehouses"), get("/categories")]);
     setItems(stockRes.data.items || []);
     setWarehouses(whRes.data.warehouses || []);
+    setCategoryOptions(catRes.data.categories || []);
     setLoading(false);
   }, []);
 
@@ -440,31 +496,25 @@ export default function AdminStockPage() {
                     </div>
                     <QuantityBadge quantity={item.quantity} threshold={item.low_stock_threshold} />
                   </div>
-                  <div className="grid grid-cols-2 gap-2 mt-3">
-                    <button onClick={() => openAdjust(item, "add")} className="btn-secondary text-xs px-1">
+                  <div className="flex items-center gap-2 mt-3">
+                    <button onClick={() => openAdjust(item, "add")} className="btn-secondary flex-1 text-xs">
                       Add
                     </button>
                     <button
                       onClick={() => openAdjust(item, "deduct")}
-                      className="btn-secondary text-xs px-1"
+                      className="btn-secondary flex-1 text-xs"
                       disabled={item.quantity === 0}
                     >
                       Sale
                     </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <button onClick={() => openMove(item)} className="btn-secondary text-xs px-1">
-                      Move
-                    </button>
-                    <button onClick={() => openEdit(item)} className="btn-secondary text-xs px-1">
-                      Edit
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <button onClick={() => openHistory(item)} className="btn-secondary text-xs px-1">
-                      History
-                    </button>
-                    <button onClick={() => handleDelete(item)} className="btn-danger text-xs px-1">Delete</button>
+                    <ActionsMenu
+                      actions={[
+                        { label: "Move", onClick: () => openMove(item) },
+                        { label: "Edit", onClick: () => openEdit(item) },
+                        { label: "History", onClick: () => openHistory(item) },
+                        { label: "Delete", onClick: () => handleDelete(item), danger: true },
+                      ]}
+                    />
                   </div>
                 </div>
               ))}
@@ -496,7 +546,7 @@ export default function AdminStockPage() {
                       <td className="px-5 py-4 text-slate-600">{item.warehouse_name}</td>
                       <td className="px-5 py-4"><QuantityBadge quantity={item.quantity} threshold={item.low_stock_threshold} /></td>
                       <td className="px-5 py-4">
-                        <div className="flex flex-wrap justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button onClick={() => openAdjust(item, "add")} className="btn-secondary text-xs py-1.5 px-2.5 min-h-0">
                             Add
                           </button>
@@ -507,18 +557,14 @@ export default function AdminStockPage() {
                           >
                             Sale
                           </button>
-                          <button onClick={() => openMove(item)} className="btn-secondary text-xs py-1.5 px-2.5 min-h-0">
-                            Move
-                          </button>
-                          <button onClick={() => openEdit(item)} className="btn-secondary text-xs py-1.5 px-2.5 min-h-0">
-                            Edit
-                          </button>
-                          <button onClick={() => openHistory(item)} className="btn-secondary text-xs py-1.5 px-2.5 min-h-0">
-                            History
-                          </button>
-                          <button onClick={() => handleDelete(item)} className="btn-danger text-xs py-1.5 px-2.5 min-h-0">
-                            Delete
-                          </button>
+                          <ActionsMenu
+                            actions={[
+                              { label: "Move", onClick: () => openMove(item) },
+                              { label: "Edit", onClick: () => openEdit(item) },
+                              { label: "History", onClick: () => openHistory(item) },
+                              { label: "Delete", onClick: () => handleDelete(item), danger: true },
+                            ]}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -549,7 +595,17 @@ export default function AdminStockPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Category</label>
-              <input className="input" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Optional" />
+              <select className="select" value={newCategory} onChange={(e) => setNewCategory(e.target.value)}>
+                <option value="">No category</option>
+                {categoryOptions.map((c) => (
+                  <option key={c.id} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+              {categoryOptions.length === 0 && (
+                <p className="text-xs text-slate-400 mt-1">
+                  No tags yet — add some in <Link to="/admin/settings" className="underline">Settings</Link>.
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Low Stock At</label>
@@ -716,7 +772,15 @@ export default function AdminStockPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Category</label>
-                <input className="input" value={editCategory} onChange={(e) => setEditCategory(e.target.value)} placeholder="Optional" />
+                <select className="select" value={editCategory} onChange={(e) => setEditCategory(e.target.value)}>
+                  <option value="">No category</option>
+                  {categoryOptions.map((c) => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                  {editCategory && !categoryOptions.some((c) => c.name === editCategory) && (
+                    <option value={editCategory}>{editCategory} (no longer in your tag list)</option>
+                  )}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Low Stock At</label>

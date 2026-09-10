@@ -62,6 +62,7 @@ router.get(
         recentActivity: recentLogs.map((l) => ({
           id: l._id,
           action: l.action,
+          item_name: l.itemName,
           details: l.details,
           created_at: l.createdAt,
           username: l.userId?.username,
