@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { Modal, Alert, LoadingSpinner, EmptyState, QuantityBadge, ActionLabel } from "../components/ui";
 import { get, post, patch, del } from "../lib/api";
@@ -41,23 +42,66 @@ function ConfirmSummary({ rows, onBack, onConfirm, confirmLabel, submitting, dan
 // Kebab-menu of secondary row actions (Move / Edit / History / Delete),
 // so a row isn't six buttons wide — Add/Sale stay as their own buttons
 // since those are the actions used most often.
+//
+// The menu renders through a portal with fixed positioning rather than as
+// an absolutely-positioned child: the desktop table sits inside a card with
+// `overflow-hidden` (needed for its rounded corners), which would otherwise
+// clip the menu for any row near the bottom of the table. Positioning is
+// measured from the button on open, and flips above the button when there
+// isn't room below it in the viewport.
+const MENU_WIDTH = 176; // matches w-44
+const MENU_ITEM_HEIGHT = 36;
+
 function ActionsMenu({ actions }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef(null);
+  const menuRef = useRef(null);
+
+  function toggle() {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = actions.length * MENU_ITEM_HEIGHT + 8;
+      const openUpward = rect.bottom + menuHeight + 8 > window.innerHeight;
+      setPosition({
+        top: openUpward ? rect.top - menuHeight - 6 : rect.bottom + 6,
+        // Right-aligned to the button, but never off the left edge.
+        left: Math.max(8, rect.right - MENU_WIDTH),
+      });
+    }
+    setOpen((o) => !o);
+  }
 
   useEffect(() => {
-    function onClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    if (!open) return undefined;
+
+    function onPointerDown(e) {
+      if (buttonRef.current?.contains(e.target)) return;
+      if (menuRef.current?.contains(e.target)) return;
+      setOpen(false);
     }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
+    // A fixed-position menu would drift away from its button on scroll, so
+    // close instead of trying to keep them in sync.
+    function dismiss() {
+      setOpen(false);
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("scroll", dismiss, true);
+    window.addEventListener("resize", dismiss);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("scroll", dismiss, true);
+      window.removeEventListener("resize", dismiss);
+    };
+  }, [open]);
 
   return (
-    <div className="relative inline-block" ref={ref}>
+    <>
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         className="w-9 h-9 rounded-lg border border-line bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 shrink-0"
         aria-label="More actions"
       >
@@ -67,27 +111,33 @@ function ActionsMenu({ actions }) {
           <circle cx="12" cy="19" r="1.75" />
         </svg>
       </button>
-      {open && (
-        <div className="absolute right-0 mt-1.5 w-44 card p-1 z-30">
-          {actions.map((a) => (
-            <button
-              key={a.label}
-              type="button"
-              disabled={a.disabled}
-              onClick={() => {
-                setOpen(false);
-                a.onClick();
-              }}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                a.danger ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              {a.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="fixed w-44 card p-1 z-50"
+            style={{ top: position.top, left: position.left }}
+          >
+            {actions.map((a) => (
+              <button
+                key={a.label}
+                type="button"
+                disabled={a.disabled}
+                onClick={() => {
+                  setOpen(false);
+                  a.onClick();
+                }}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  a.danger ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
+    </>
   );
 }
 
