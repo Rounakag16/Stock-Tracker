@@ -322,7 +322,10 @@ router.get(
   })
 );
 
-// POST /api/stock/import — bulk-create or update items from CSV text.
+// POST /api/stock/import — bulk-add or create items from an uploaded CSV.
+// For an item that already exists in that warehouse, the CSV quantity is
+// ADDED to the current quantity (a restock upload, not a full replace) —
+// so re-uploading the same file twice adds it twice, by design.
 // Expects columns: Item, Warehouse, Quantity, and optionally Tag,
 // Party, Low Stock Threshold. Warehouse is matched by name (case-
 // insensitive) against the company's existing warehouses — it does not
@@ -386,7 +389,8 @@ router.post(
 
       if (existing) {
         const before = existing.quantity;
-        existing.quantity = quantity;
+        const after = before + quantity;
+        existing.quantity = after;
         existing.category = category ?? existing.category;
         existing.partyName = partyName ?? existing.partyName;
         if (threshold !== null) existing.lowStockThreshold = threshold;
@@ -400,11 +404,11 @@ router.post(
           warehouseId: warehouse._id,
           itemId: existing._id,
           itemName: existing.name,
-          action: "edit_item",
+          action: "add_quantity",
           quantityBefore: before,
-          quantityAfter: quantity,
-          quantityChange: quantity - before,
-          details: `Updated "${existing.name}" via CSV import`,
+          quantityAfter: after,
+          quantityChange: quantity,
+          details: `Added ${quantity} of "${existing.name}" via CSV upload (was ${before}, now ${after})`,
         });
       } else {
         const item = await StockItem.create({
@@ -428,7 +432,7 @@ router.post(
           quantityBefore: 0,
           quantityAfter: quantity,
           quantityChange: quantity,
-          details: `Created "${item.name}" via CSV import`,
+          details: `Created "${item.name}" via CSV upload`,
         });
       }
     }

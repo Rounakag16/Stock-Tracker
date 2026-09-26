@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Modal, Alert, LoadingSpinner, EmptyState, PasswordInput } from "../components/ui";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
-import { get, post } from "../lib/api";
+import { get, post, del } from "../lib/api";
 
 export default function AdminEmployeesPage() {
   const [employees, setEmployees] = useState([]);
@@ -47,6 +47,18 @@ export default function AdminEmployeesPage() {
     loadData();
   }
 
+  async function handleDelete(emp) {
+    if (!confirm(`Remove "${emp.username}"? They will no longer be able to sign in. Their past activity stays in the logs.`)) return;
+
+    const { ok, data } = await del(`/users/${emp.id}`);
+    if (!ok) {
+      setError(data.error);
+      return;
+    }
+    setSuccess(`Employee "${emp.username}" removed`);
+    setEmployees((prev) => prev.filter((e) => e.id !== emp.id));
+  }
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -66,6 +78,7 @@ export default function AdminEmployeesPage() {
         </div>
 
         {success && <div className="mb-4"><Alert type="success" message={success} onDismiss={() => setSuccess("")} /></div>}
+        {error && <div className="mb-4"><Alert type="error" message={error} onDismiss={() => setError("")} /></div>}
 
         {employees.length === 0 ? (
           <EmptyState title="No employees yet" description="Create an employee account so they can manage stock" />
@@ -82,9 +95,14 @@ export default function AdminEmployeesPage() {
                     <p className="text-xs text-slate-500">Joined {new Date(emp.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <button onClick={() => setResetTarget(emp)} className="btn-secondary text-sm shrink-0">
-                  Reset password
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => setResetTarget(emp)} className="btn-secondary text-sm">
+                    Reset password
+                  </button>
+                  <button onClick={() => handleDelete(emp)} className="btn-danger text-sm">
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>

@@ -24,6 +24,7 @@ const ACTIVITY_ACTION_LABELS = {
   delete_warehouse: "Deleted Warehouse",
   rename_warehouse: "Renamed Warehouse",
   create_employee: "New Employee",
+  delete_employee: "Removed Employee",
   change_password: "Password Changed",
   request_submitted: "Requested",
   request_approved: "Approved",

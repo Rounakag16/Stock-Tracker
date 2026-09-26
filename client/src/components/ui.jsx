@@ -131,6 +131,7 @@ const ACTION_LABELS = {
   delete_warehouse: { text: "Del Warehouse", color: "bg-red-100 text-red-700" },
   rename_warehouse: { text: "Renamed Warehouse", color: "bg-teal-100 text-teal-700" },
   create_employee: { text: "New Employee", color: "bg-cyan-100 text-cyan-700" },
+  delete_employee: { text: "Removed Employee", color: "bg-red-100 text-red-700" },
   change_password: { text: "Password", color: "bg-slate-100 text-slate-700" },
   request_submitted: { text: "Requested", color: "bg-yellow-100 text-yellow-800" },
   request_approved: { text: "Approved", color: "bg-emerald-100 text-emerald-700" },

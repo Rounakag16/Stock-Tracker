@@ -27,11 +27,11 @@ function serialize(reqDoc) {
     status: reqDoc.status,
     review_note: reqDoc.reviewNote,
     created_at: reqDoc.createdAt,
-    requester_name: reqDoc.userId?.username,
+    requester_name: reqDoc.userId?.username || "Deleted user",
     item_name: reqDoc.itemId?.name,
     from_warehouse_name: reqDoc.fromWarehouseId?.name,
     to_warehouse_name: reqDoc.toWarehouseId?.name || null,
-    reviewer_name: reqDoc.reviewedBy?.username || null,
+    reviewer_name: reqDoc.reviewedBy?.username || (reqDoc.reviewedAt ? "Deleted user" : null),
   };
 }
 

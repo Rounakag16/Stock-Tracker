@@ -65,7 +65,7 @@ router.get(
           item_name: l.itemName,
           details: l.details,
           created_at: l.createdAt,
-          username: l.userId?.username,
+          username: l.userId?.username || "Deleted user",
           warehouse_name: l.warehouseId?.name || null,
         })),
         byWarehouse,

@@ -25,6 +25,7 @@ const activityLogSchema = new mongoose.Schema({
       "delete_warehouse",
       "rename_warehouse",
       "create_employee",
+      "delete_employee",
       "change_password",
       "request_submitted",
       "request_approved",

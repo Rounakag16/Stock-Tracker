@@ -62,4 +62,40 @@ router.post(
   })
 );
 
+router.delete(
+  "/:id",
+  requireAuth(["admin"]),
+  asyncHandler(async (req, res) => {
+    // Scoping the lookup to role: "employee" means this route can never be
+    // used to delete an admin account, even if an admin's id were passed
+    // in — including the requester's own.
+    const employee = await User.findOne({
+      _id: req.params.id,
+      companyId: req.session.companyId,
+      role: "employee",
+    });
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    const { username } = employee;
+    await employee.deleteOne();
+
+    // Pending requests and past logs from this employee are left as-is —
+    // approving/denying a request doesn't require the requester to still
+    // exist, and historical logs remain valid audit history. Both fall
+    // back to displaying "Deleted user" wherever the account no longer
+    // resolves.
+    await logActivity({
+      companyId: req.session.companyId,
+      userId: req.session.userId,
+      itemName: username,
+      action: "delete_employee",
+      details: `Removed employee account "${username}"`,
+    });
+
+    return res.json({ success: true });
+  })
+);
+
 module.exports = router;

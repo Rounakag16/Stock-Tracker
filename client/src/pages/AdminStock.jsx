@@ -439,6 +439,31 @@ export default function AdminStockPage() {
     window.location.href = "/api/stock/export";
   }
 
+  // Builds a starter CSV using this company's real warehouse/tag names as
+  // an example row, so the admin sees exactly what a valid value looks
+  // like rather than guessing at the format from the column names alone.
+  function downloadTemplate() {
+    const exampleWarehouse = warehouses[0]?.name || "Warehouse Name";
+    const exampleTag = tags[0]?.name || "";
+    const header = ["Item", "Warehouse", "Quantity", "Tag", "Party", "Low Stock Threshold"];
+    const exampleRow = ["Example Item", exampleWarehouse, "10", exampleTag, "", ""];
+    const blankRow = ["", "", "", "", "", ""];
+
+    const csvLine = (row) =>
+      row.map((v) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)).join(",");
+    const csv = [header, exampleRow, blankRow].map(csvLine).join("\r\n");
+
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "stock-upload-template.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   function openImport() {
     setImportText("");
     setImportResult(null);
@@ -491,10 +516,10 @@ export default function AdminStockPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <button onClick={openImport} className="btn-secondary">
-              Import CSV
+              Upload CSV
             </button>
             <button onClick={handleExport} className="btn-secondary">
-              Export CSV
+              Download CSV
             </button>
             <button onClick={() => { setShowAdd(true); setError(""); }} className="btn-primary">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -915,13 +940,13 @@ export default function AdminStockPage() {
         )}
       </Modal>
 
-      <Modal open={showImport} onClose={() => setShowImport(false)} title="Import Stock from CSV">
+      <Modal open={showImport} onClose={() => setShowImport(false)} title="Upload Stock from CSV">
         <form onSubmit={handleImport} className="space-y-4">
           {importError && <Alert type="error" message={importError} />}
           {importResult && (
             <Alert
               type={importResult.errors.length > 0 ? "info" : "success"}
-              message={`Created ${importResult.created}, updated ${importResult.updated} of ${importResult.totalRows} rows.${importResult.errors.length > 0 ? ` ${importResult.errors.length} row(s) had errors — see below.` : ""}`}
+              message={`Created ${importResult.created} new item${importResult.created === 1 ? "" : "s"}, added stock to ${importResult.updated} existing item${importResult.updated === 1 ? "" : "s"} — ${importResult.totalRows} row${importResult.totalRows === 1 ? "" : "s"} total.${importResult.errors.length > 0 ? ` ${importResult.errors.length} row(s) had errors — see below.` : ""}`}
             />
           )}
           {importResult?.errors?.length > 0 && (
@@ -929,10 +954,27 @@ export default function AdminStockPage() {
               {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
             </ul>
           )}
+
+          <button
+            type="button"
+            onClick={downloadTemplate}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-line text-sm font-medium text-slate-600 hover:bg-slate-50"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+            </svg>
+            Download blank template
+          </button>
+
           <p className="text-xs text-slate-500">
             Columns: <span className="font-mono">Item, Warehouse, Quantity</span>, and optionally{" "}
             <span className="font-mono">Tag, Party, Low Stock Threshold</span>. Warehouse must match an
             existing warehouse name exactly.
+          </p>
+          <p className="text-xs text-slate-500">
+            If an item already exists in that warehouse, the uploaded quantity is <strong>added</strong> to
+            its current stock rather than replacing it — this is for restocking, not overwriting counts.
+            To correct a count instead, use Edit on that item.
           </p>
           <div>
             <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChosen} className="text-sm" />
@@ -944,7 +986,7 @@ export default function AdminStockPage() {
             onChange={(e) => setImportText(e.target.value)}
           />
           <button type="submit" className="btn-primary w-full" disabled={importing || !importText.trim()}>
-            {importing ? "Importing..." : "Import"}
+            {importing ? "Uploading..." : "Upload"}
           </button>
         </form>
       </Modal>

@@ -81,7 +81,7 @@ router.get(
         quantity_change: l.quantityChange,
         details: l.details,
         created_at: l.createdAt,
-        username: l.userId?.username,
+        username: l.userId?.username || "Deleted user",
         warehouse_name: l.warehouseId?.name || null,
       })),
       total,
@@ -101,8 +101,15 @@ function csvField(value) {
 }
 
 // GET /api/logs/export — same filters as the list endpoint, but returns
-// every matching row (capped) as a downloadable CSV. Excel opens CSV files
-// natively, so this needs no extra file-format library.
+// every matching row (capped) as a downloadable CSV.
+//
+// Deliberately narrower than the in-app log view: a free-text "Details"
+// column and separate before/after quantity columns are useful to read,
+// but they're dead weight for someone building a PivotTable — mixed
+// text prevents grouping, and before/after is redundant with Change once
+// you're summarizing rather than auditing a single row. Date and Time are
+// split into their own columns because Excel can group/pivot on a bare
+// date far more reliably than on a full timestamp string.
 router.get(
   "/export",
   requireAuth(["admin"]),
@@ -116,33 +123,22 @@ router.get(
       .populate("userId", "username")
       .populate("warehouseId", "name");
 
-    const header = [
-      "Date",
-      "User",
-      "Action",
-      "Item",
-      "Warehouse",
-      "Quantity Before",
-      "Quantity After",
-      "Quantity Change",
-      "Details",
-    ];
+    const header = ["Date", "Time", "User", "Action", "Item", "Warehouse", "Quantity Change"];
 
-    const rows = logs.map((l) =>
-      [
-        l.createdAt.toISOString(),
-        l.userId?.username || "",
+    const rows = logs.map((l) => {
+      const iso = l.createdAt.toISOString();
+      return [
+        iso.slice(0, 10),
+        iso.slice(11, 19),
+        l.userId?.username || "Deleted user",
         activityActionLabel(l.action),
         l.itemName,
         l.warehouseId?.name || "",
-        l.quantityBefore ?? "",
-        l.quantityAfter ?? "",
         l.quantityChange ?? "",
-        l.details || "",
       ]
         .map(csvField)
-        .join(",")
-    );
+        .join(",");
+    });
 
     const csv = [header.map(csvField).join(","), ...rows].join("\r\n");
     const filename = `activity-logs-${new Date().toISOString().slice(0, 10)}.csv`;
