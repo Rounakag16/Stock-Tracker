@@ -2,6 +2,7 @@ const express = require("express");
 const ActivityLog = require("../models/ActivityLog");
 const { requireAuth } = require("../middleware/auth");
 const { activityActionLabel } = require("../lib/labels");
+const { buildWorkbookBuffer } = require("../lib/excel");
 const { asyncHandler } = require("../lib/asyncHandler");
 
 const router = express.Router();
@@ -89,27 +90,18 @@ router.get(
   })
 );
 
-// Wraps a CSV field in quotes and escapes internal quotes, only when
-// needed — keeps plain fields readable while staying safe for anything
-// containing a comma, quote, or newline (e.g. free-text "details").
-function csvField(value) {
-  const str = value === null || value === undefined ? "" : String(value);
-  if (/[",\n]/.test(str)) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-}
-
 // GET /api/logs/export — same filters as the list endpoint, but returns
-// every matching row (capped) as a downloadable CSV.
+// every matching row (capped) as a downloadable .xlsx workbook.
 //
-// Deliberately narrower than the in-app log view: a free-text "Details"
-// column and separate before/after quantity columns are useful to read,
-// but they're dead weight for someone building a PivotTable — mixed
-// text prevents grouping, and before/after is redundant with Change once
-// you're summarizing rather than auditing a single row. Date and Time are
-// split into their own columns because Excel can group/pivot on a bare
-// date far more reliably than on a full timestamp string.
+// Deliberately narrower than the in-app log view, and a real workbook
+// rather than CSV: a free-text "Details" column and separate before/after
+// quantity columns are useful to read, but they're dead weight for
+// someone building a PivotTable — mixed text prevents grouping, and
+// before/after is redundant with Change once you're summarizing rather
+// than auditing a single row. Date and Time are split into their own
+// columns so Excel can group/pivot on a bare date reliably, and a true
+// workbook sidesteps the regional CSV-delimiter differences a plain CSV
+// export would otherwise run into.
 router.get(
   "/export",
   requireAuth(["admin"]),
@@ -135,19 +127,15 @@ router.get(
         l.itemName,
         l.warehouseId?.name || "",
         l.quantityChange ?? "",
-      ]
-        .map(csvField)
-        .join(",");
+      ];
     });
 
-    const csv = [header.map(csvField).join(","), ...rows].join("\r\n");
-    const filename = `activity-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+    const buffer = await buildWorkbookBuffer("Activity Logs", header, rows);
+    const filename = `activity-logs-${new Date().toISOString().slice(0, 10)}.xlsx`;
 
-    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    // Byte-order mark so Excel detects UTF-8 correctly instead of mangling
-    // any non-ASCII characters in item names or details.
-    res.send("\uFEFF" + csv);
+    res.send(buffer);
   })
 );
 

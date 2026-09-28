@@ -1,9 +1,10 @@
 const express = require("express");
 const StockItem = require("../models/StockItem");
 const Warehouse = require("../models/Warehouse");
+const Tag = require("../models/Tag");
 const { requireAuth } = require("../middleware/auth");
 const { applyStockAdjust, applyStockMove, logActivity } = require("../lib/stockOps");
-const { toCsv, parseCsvObjects } = require("../lib/csv");
+const { buildWorkbookBuffer, parseWorkbookRows } = require("../lib/excel");
 const { asyncHandler } = require("../lib/asyncHandler");
 
 const router = express.Router();
@@ -291,7 +292,11 @@ router.post(
   })
 );
 
-// GET /api/stock/export — current stock levels as a downloadable CSV.
+// GET /api/stock/export — current stock levels as a downloadable .xlsx
+// workbook. A true workbook rather than CSV sidesteps regional formatting
+// differences entirely — some locales' Excel installs expect ';' as the
+// CSV delimiter and ',' as the decimal separator, which silently mangles
+// a comma-delimited CSV into a single column for those users.
 router.get(
   "/export",
   requireAuth(["admin"]),
@@ -308,25 +313,54 @@ router.get(
       i.category || "",
       i.partyName || "",
       i.lowStockThreshold ?? "",
-      i.updatedAt.toISOString(),
+      i.updatedAt.toISOString().slice(0, 10),
     ]);
 
-    const csv = toCsv(header, rows);
-    const filename = `stock-${new Date().toISOString().slice(0, 10)}.csv`;
+    const buffer = await buildWorkbookBuffer("Stock", header, rows);
+    const filename = `stock-${new Date().toISOString().slice(0, 10)}.xlsx`;
 
-    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    // Byte-order mark so Excel detects UTF-8 correctly instead of mangling
-    // any non-ASCII characters in item or party names.
-    res.send("\uFEFF" + csv);
+    res.send(buffer);
   })
 );
 
-// POST /api/stock/import — bulk-add or create items from an uploaded CSV.
-// For an item that already exists in that warehouse, the CSV quantity is
-// ADDED to the current quantity (a restock upload, not a full replace) —
-// so re-uploading the same file twice adds it twice, by design.
-// Expects columns: Item, Warehouse, Quantity, and optionally Tag,
+// GET /api/stock/template — a blank starter workbook for the upload flow
+// below, seeded with one example row using this company's own real
+// warehouse/tag names (so the admin sees a valid value, not a guess) plus
+// one blank row ready to fill in.
+router.get(
+  "/template",
+  requireAuth(["admin"]),
+  asyncHandler(async (req, res) => {
+    const [warehouse, tag] = await Promise.all([
+      Warehouse.findOne({ companyId: req.session.companyId }).sort({ name: 1 }),
+      Tag.findOne({ companyId: req.session.companyId }).sort({ name: 1 }),
+    ]);
+
+    const header = ["Item", "Warehouse", "Quantity", "Tag", "Party", "Low Stock Threshold"];
+    const rows = [
+      ["Example Item", warehouse?.name || "Warehouse Name", 10, tag?.name || "", "", ""],
+      ["", "", "", "", "", ""],
+    ];
+
+    const buffer = await buildWorkbookBuffer("Stock Upload", header, rows);
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", 'attachment; filename="stock-upload-template.xlsx"');
+    res.send(buffer);
+  })
+);
+
+// POST /api/stock/import — bulk-add or create items from an uploaded
+// .xlsx workbook (sent as base64 in the JSON body — the client reads the
+// file with FileReader.readAsDataURL, so no multipart/form-data handling
+// is needed here).
+//
+// For an item that already exists in that warehouse, the uploaded
+// quantity is ADDED to the current quantity (a restock upload, not a
+// full replace) — so re-uploading the same file twice adds it twice, by
+// design. Expects columns: Item, Warehouse, Quantity, and optionally Tag,
 // Party, Low Stock Threshold. Warehouse is matched by name (case-
 // insensitive) against the company's existing warehouses — it does not
 // create new warehouses, since a typo would otherwise silently spawn one.
@@ -334,15 +368,30 @@ router.post(
   "/import",
   requireAuth(["admin"]),
   asyncHandler(async (req, res) => {
-    const { csv } = req.body;
-    if (!csv || typeof csv !== "string") {
-      return res.status(400).json({ error: "CSV text is required" });
+    const { file } = req.body;
+    if (!file || typeof file !== "string") {
+      return res.status(400).json({ error: "A file is required" });
+    }
+
+    let buffer;
+    try {
+      // Strips a data: URL prefix if the client sent the full data URL
+      // rather than just the base64 payload.
+      const base64 = file.includes(",") ? file.split(",")[1] : file;
+      buffer = Buffer.from(base64, "base64");
+    } catch {
+      return res.status(400).json({ error: "Could not read that file" });
     }
 
     const MAX_ROWS = 2000;
-    const rows = parseCsvObjects(csv).slice(0, MAX_ROWS);
+    let rows;
+    try {
+      rows = (await parseWorkbookRows(buffer)).slice(0, MAX_ROWS);
+    } catch {
+      return res.status(400).json({ error: "That doesn't look like a valid .xlsx file" });
+    }
     if (rows.length === 0) {
-      return res.status(400).json({ error: "No rows found in CSV" });
+      return res.status(400).json({ error: "No rows found in the workbook" });
     }
 
     const warehouses = await Warehouse.find({ companyId: req.session.companyId });
@@ -408,7 +457,7 @@ router.post(
           quantityBefore: before,
           quantityAfter: after,
           quantityChange: quantity,
-          details: `Added ${quantity} of "${existing.name}" via CSV upload (was ${before}, now ${after})`,
+          details: `Added ${quantity} of "${existing.name}" via Excel upload (was ${before}, now ${after})`,
         });
       } else {
         const item = await StockItem.create({
@@ -432,7 +481,7 @@ router.post(
           quantityBefore: 0,
           quantityAfter: quantity,
           quantityChange: quantity,
-          details: `Created "${item.name}" via CSV upload`,
+          details: `Created "${item.name}" via Excel upload`,
         });
       }
     }

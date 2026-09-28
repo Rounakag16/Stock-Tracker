@@ -20,6 +20,16 @@ const tagRoutes = require("./src/routes/tags");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Render (and most PaaS hosts) put the app behind a single reverse proxy,
+// which sets X-Forwarded-For. Without telling Express to trust that one
+// hop, express-rate-limit refuses to use the header at all — since it
+// can't tell whether it's genuine or spoofed by the client — and throws
+// on every rate-limited request (login, register) instead of silently
+// falling back to something wrong. `1` means "trust exactly one hop",
+// which matches Render's setup; a deployment behind more than one proxy
+// would need a higher number here instead.
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(cookieParser());
 

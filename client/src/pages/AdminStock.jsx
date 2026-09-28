@@ -191,7 +191,10 @@ export default function AdminStockPage() {
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  const [importText, setImportText] = useState("");
+  // Base64 payload of the chosen .xlsx (sent to the server as-is) and its
+  // name, kept only so the modal can show which file is selected.
+  const [importFile, setImportFile] = useState("");
+  const [importFileName, setImportFileName] = useState("");
   const [importResult, setImportResult] = useState(null);
   const [importError, setImportError] = useState("");
   const [importing, setImporting] = useState(false);
@@ -439,33 +442,15 @@ export default function AdminStockPage() {
     window.location.href = "/api/stock/export";
   }
 
-  // Builds a starter CSV using this company's real warehouse/tag names as
-  // an example row, so the admin sees exactly what a valid value looks
-  // like rather than guessing at the format from the column names alone.
+  // Generated server-side so the example row uses this company's real
+  // warehouse and tag names.
   function downloadTemplate() {
-    const exampleWarehouse = warehouses[0]?.name || "Warehouse Name";
-    const exampleTag = tags[0]?.name || "";
-    const header = ["Item", "Warehouse", "Quantity", "Tag", "Party", "Low Stock Threshold"];
-    const exampleRow = ["Example Item", exampleWarehouse, "10", exampleTag, "", ""];
-    const blankRow = ["", "", "", "", "", ""];
-
-    const csvLine = (row) =>
-      row.map((v) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)).join(",");
-    const csv = [header, exampleRow, blankRow].map(csvLine).join("\r\n");
-
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "stock-upload-template.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    window.location.href = "/api/stock/template";
   }
 
   function openImport() {
-    setImportText("");
+    setImportFile("");
+    setImportFileName("");
     setImportResult(null);
     setImportError("");
     setShowImport(true);
@@ -474,22 +459,37 @@ export default function AdminStockPage() {
   function handleFileChosen(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImportError("");
+
+    if (!file.name.toLowerCase().endsWith(".xlsx")) {
+      setImportFile("");
+      setImportFileName("");
+      setImportError("Please choose an Excel (.xlsx) file — use the template below if you're not sure of the format.");
+      return;
+    }
+
+    // Read as a data URL and keep only the base64 payload — a binary .xlsx
+    // can't travel through a JSON body as text.
     const reader = new FileReader();
-    reader.onload = () => setImportText(String(reader.result || ""));
-    reader.readAsText(file);
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      setImportFile(result.includes(",") ? result.split(",")[1] : result);
+      setImportFileName(file.name);
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleImport(e) {
     e.preventDefault();
     setImportError("");
     setImportResult(null);
-    if (!importText.trim()) {
-      setImportError("Choose a CSV file or paste CSV text first");
+    if (!importFile) {
+      setImportError("Choose an Excel (.xlsx) file first");
       return;
     }
 
     setImporting(true);
-    const { ok, data } = await post("/stock/import", { csv: importText });
+    const { ok, data } = await post("/stock/import", { file: importFile });
     setImporting(false);
 
     if (!ok) {
@@ -498,6 +498,12 @@ export default function AdminStockPage() {
     }
 
     setImportResult(data);
+    // Uploads add to existing stock, so leaving the file selected would make
+    // an accidental second click silently double-add everything. Clear it so
+    // uploading the same file again has to be a deliberate choice.
+    setImportFile("");
+    setImportFileName("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
     loadData();
   }
 
@@ -516,10 +522,10 @@ export default function AdminStockPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <button onClick={openImport} className="btn-secondary">
-              Upload CSV
+              Upload Excel
             </button>
             <button onClick={handleExport} className="btn-secondary">
-              Download CSV
+              Download Excel
             </button>
             <button onClick={() => { setShowAdd(true); setError(""); }} className="btn-primary">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -940,7 +946,7 @@ export default function AdminStockPage() {
         )}
       </Modal>
 
-      <Modal open={showImport} onClose={() => setShowImport(false)} title="Upload Stock from CSV">
+      <Modal open={showImport} onClose={() => setShowImport(false)} title="Upload Stock from Excel">
         <form onSubmit={handleImport} className="space-y-4">
           {importError && <Alert type="error" message={importError} />}
           {importResult && (
@@ -976,16 +982,21 @@ export default function AdminStockPage() {
             its current stock rather than replacing it — this is for restocking, not overwriting counts.
             To correct a count instead, use Edit on that item.
           </p>
+
           <div>
-            <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChosen} className="text-sm" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              onChange={handleFileChosen}
+              className="text-sm"
+            />
+            {importFileName && (
+              <p className="text-xs text-slate-500 mt-1.5">Selected: {importFileName}</p>
+            )}
           </div>
-          <textarea
-            className="input font-mono text-xs h-32"
-            placeholder="Or paste CSV text here"
-            value={importText}
-            onChange={(e) => setImportText(e.target.value)}
-          />
-          <button type="submit" className="btn-primary w-full" disabled={importing || !importText.trim()}>
+
+          <button type="submit" className="btn-primary w-full" disabled={importing || !importFile}>
             {importing ? "Uploading..." : "Upload"}
           </button>
         </form>

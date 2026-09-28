@@ -67,8 +67,7 @@ router.delete(
   requireAuth(["admin"]),
   asyncHandler(async (req, res) => {
     // Scoping the lookup to role: "employee" means this route can never be
-    // used to delete an admin account, even if an admin's id were passed
-    // in — including the requester's own.
+    // used to delete an admin account, including the requester's own.
     const employee = await User.findOne({
       _id: req.params.id,
       companyId: req.session.companyId,
@@ -82,10 +81,9 @@ router.delete(
     await employee.deleteOne();
 
     // Pending requests and past logs from this employee are left as-is —
-    // approving/denying a request doesn't require the requester to still
-    // exist, and historical logs remain valid audit history. Both fall
-    // back to displaying "Deleted user" wherever the account no longer
-    // resolves.
+    // approving/denying a request doesn't need the requester to still
+    // exist, and historical logs remain valid audit history. Both display
+    // "Deleted user" wherever the account no longer resolves.
     await logActivity({
       companyId: req.session.companyId,
       userId: req.session.userId,
