@@ -38,6 +38,10 @@ const activityLogSchema = new mongoose.Schema({
   quantityAfter: { type: Number, default: null },
   quantityChange: { type: Number, default: null },
   details: { type: String, default: null },
+  // The party (customer/supplier) the activity was for. Nullable: only set
+  // going forward, and only for actions that involve a party. Older rows
+  // keep the party inside `details` — see partyFromDetails() in routes/logs.js.
+  partyName: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

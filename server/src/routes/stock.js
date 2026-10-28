@@ -97,6 +97,7 @@ router.post(
         quantityAfter: qty,
         quantityChange: qty,
         details: `Created item "${trimmed}" in ${warehouse.name}${party ? ` (Party: ${party})` : ""}`,
+        partyName: party,
       });
 
       return res.json({ item: serializeItem(item) });
@@ -458,6 +459,7 @@ router.post(
           quantityAfter: after,
           quantityChange: quantity,
           details: `Added ${quantity} of "${existing.name}" via Excel upload (was ${before}, now ${after})`,
+          partyName,
         });
       } else {
         const item = await StockItem.create({
@@ -482,6 +484,7 @@ router.post(
           quantityAfter: quantity,
           quantityChange: quantity,
           details: `Created "${item.name}" via Excel upload`,
+          partyName,
         });
       }
     }

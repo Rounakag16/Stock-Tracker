@@ -123,6 +123,7 @@ router.post(
       action: "request_submitted",
       quantityChange: type === "deduct" || type === "move" ? -qty : qty,
       details: `Submitted ${actionWord(type)} request for ${qty} of "${item.name}" — Party: ${party}`,
+      partyName: party,
     });
 
     await notifyAdmins({
@@ -197,6 +198,7 @@ async function persistEdit(reqDoc, resolved, editorId, editorLabel) {
     itemName: resolved.itemName,
     action: "request_edited",
     details: `${editorLabel} edited ${actionWord(resolved.type)} request for ${resolved.qty} of "${resolved.itemName}" — Party: ${resolved.party}`,
+    partyName: resolved.party,
   });
 }
 
@@ -276,6 +278,7 @@ router.post(
         itemName,
         action: "request_denied",
         details: `Denied ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})${note ? ` — ${note}` : ""}`,
+        partyName: reqDoc.partyName,
       });
 
       await notifyUser({
@@ -334,6 +337,7 @@ router.post(
       quantityChange:
         reqDoc.action === "deduct" || reqDoc.action === "move" ? -reqDoc.quantity : reqDoc.quantity,
       details: `Approved ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})`,
+      partyName: reqDoc.partyName,
     });
 
     await notifyUser({

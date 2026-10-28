@@ -7,6 +7,18 @@ const { asyncHandler } = require("../lib/asyncHandler");
 
 const router = express.Router();
 
+// Older log rows were written before partyName was its own field, so the
+// party only exists inside the free-text `details` — as "(Party: X)" or as
+// a trailing "— Party: X". Best-effort recovery so historical rows still
+// get a Party value in the export.
+function partyFromDetails(details) {
+  if (!details) return "";
+  const parenthesized = details.match(/\(Party: (.+?)\)(?: — |$)/);
+  if (parenthesized) return parenthesized[1].trim();
+  const trailing = details.match(/ — Party: (.+)$/);
+  return trailing ? trailing[1].trim() : "";
+}
+
 // Parses a "YYYY-MM-DD" query param into a Date, or throws a clear error
 // if it isn't one — e.g. a mistyped year like "2000026" produces a JS
 // Date that's out of range, which would otherwise reach MongoDB as
@@ -115,7 +127,7 @@ router.get(
       .populate("userId", "username")
       .populate("warehouseId", "name");
 
-    const header = ["Date", "Time", "User", "Action", "Item", "Warehouse", "Quantity Change"];
+    const header = ["Date", "Time", "User", "Action", "Item", "Party", "Warehouse", "Quantity Change"];
 
     const rows = logs.map((l) => {
       const iso = l.createdAt.toISOString();
@@ -125,6 +137,7 @@ router.get(
         l.userId?.username || "Deleted user",
         activityActionLabel(l.action),
         l.itemName,
+        l.partyName || partyFromDetails(l.details),
         l.warehouseId?.name || "",
         l.quantityChange ?? "",
       ];

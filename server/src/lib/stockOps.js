@@ -15,6 +15,7 @@ async function logActivity({
   quantityAfter = null,
   quantityChange = null,
   details = null,
+  partyName = null,
 }) {
   await ActivityLog.create({
     companyId,
@@ -27,6 +28,7 @@ async function logActivity({
     quantityAfter,
     quantityChange,
     details,
+    partyName: partyName || null,
   });
 }
 
@@ -93,6 +95,7 @@ async function applyStockAdjust({ companyId, itemId, type, qty, userId, partyNam
     quantityAfter: after,
     quantityChange: after - before,
     details: detailText,
+    partyName,
   });
 
   return { item, before, after };
@@ -168,6 +171,7 @@ async function applyStockMove({
     quantityAfter: updatedSource.quantity,
     quantityChange: -qty,
     details: `Moved ${qty} of "${sourceItem.name}" to ${destWarehouse.name}${partyNote}`,
+    partyName,
   });
 
   await logActivity({
@@ -181,6 +185,7 @@ async function applyStockMove({
     quantityAfter: destAfter,
     quantityChange: qty,
     details: `Received ${qty} of "${sourceItem.name}" from ${sourceWarehouseName}${partyNote}`,
+    partyName,
   });
 
   return { newSourceQty: updatedSource.quantity, destAfter };
