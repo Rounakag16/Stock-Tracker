@@ -146,7 +146,7 @@ export default function AdminRequestsPage() {
             key={s}
             onClick={() => setFilter(s)}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap capitalize ${
-              filter === s ? "bg-brand-600 text-white" : "bg-white border border-line text-slate-600 hover:bg-slate-50"
+              filter === s ? "bg-ink text-paper" : "bg-white border border-line text-slate-600 hover:bg-slate-50"
             }`}
           >
             {s}

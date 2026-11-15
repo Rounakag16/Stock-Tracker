@@ -188,7 +188,7 @@ export default function AdminDailyPage() {
               color="text-amber-700"
               sub={totals.removed ? `${totals.removed} removed` : "count corrections"}
             />
-            <StatCard label="Closing Stock" value={totals.closing} color="text-brand-600" sub="end of day" />
+            <StatCard label="Closing Stock" value={totals.closing} color="text-brand-700" sub="end of day" />
           </div>
 
           <div className="card mb-8">

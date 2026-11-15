@@ -87,7 +87,7 @@ export function NotificationBell({ align = "right" }) {
           <div className="flex items-center justify-between px-4 py-3 border-b border-line">
             <h3 className="font-semibold text-sm text-slate-900">Notifications</h3>
             {unreadCount > 0 && (
-              <button onClick={markAllRead} className="text-xs font-medium text-brand-600 hover:underline">
+              <button onClick={markAllRead} className="text-xs font-medium text-brand-700 hover:underline">
                 Mark all read
               </button>
             )}

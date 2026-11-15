@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert, PasswordInput } from "../components/ui";
+import { AuthLayout, Field } from "../components/AuthLayout";
 import { post } from "../lib/api";
 
 export default function LoginPage() {
@@ -33,95 +34,84 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <Link
-              to="/"
-              className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-ink flex items-center justify-center shadow-lg shadow-ink/20"
-            >
-              <svg className="w-8 h-8 text-paper" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </Link>
-            <h1 className="text-2xl font-bold text-slate-900">Stock Tracker</h1>
-            <p className="text-slate-500 mt-1">Sign in to manage inventory</p>
-          </div>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to your company's workspace."
+      panelTitle={
+        <>
+          Your stock, <span className="text-brand-500">always in sync.</span>
+        </>
+      }
+      panelPoints={[
+        "Approve your team's sales, receipts and transfers",
+        "See opening and closing stock for any day",
+        "Get alerted before an item runs out",
+      ]}
+      footer={
+        <>
+          New to Stock Tracker?{" "}
+          <Link to="/signup" className="font-semibold text-brand-700 hover:underline">
+            Create a workspace
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && <Alert type="error" message={error} onDismiss={() => setError("")} />}
 
-          <form onSubmit={handleSubmit} className="card p-6 space-y-4">
-            {error && <Alert type="error" message={error} onDismiss={() => setError("")} />}
+        <Field id="companySlug" label="Company code" hint="Your admin shares this — it's shown on their Settings page.">
+          <input
+            id="companySlug"
+            type="text"
+            className="input font-mono"
+            value={companySlug}
+            onChange={(e) => setCompanySlug(e.target.value)}
+            placeholder="e.g. sharma-hardware"
+            autoComplete="organization"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+          />
+        </Field>
 
-            <div>
-              <label htmlFor="companySlug" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Company Code
-              </label>
-              <input
-                id="companySlug"
-                type="text"
-                className="input"
-                value={companySlug}
-                onChange={(e) => setCompanySlug(e.target.value)}
-                placeholder="e.g. acme-hardware"
-                autoComplete="organization"
-                required
-              />
-            </div>
+        <Field id="username" label="Username">
+          <input
+            id="username"
+            type="text"
+            className="input"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Your username"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+          />
+        </Field>
 
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                className="input"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
-                autoComplete="username"
-                required
-              />
-            </div>
+        <Field id="password" label="Password">
+          <PasswordInput
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Your password"
+            autoComplete="current-password"
+            required
+          />
+        </Field>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Password
-              </label>
-              <PasswordInput
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                autoComplete="current-password"
-                required
-              />
-            </div>
+        <button type="submit" className="btn-primary w-full !py-3.5 text-base" disabled={loading}>
+          {loading ? "Signing in…" : "Sign in"}
+        </button>
 
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-
-            {/* Password recovery exists in the codebase (ForgotPassword.jsx,
-                ResetPassword.jsx, server/src/routes/auth.js) but isn't wired
-                up to a real email service — it currently just logs the
-                reset link to the server console, which doesn't work for an
-                actual deployed user. Hidden until that's connected to real
-                SMTP delivery. See the matching commented-out routes below
-                and in App.jsx. */}
-            {/* <Link to="/forgot-password" className="block text-center text-sm text-slate-500 hover:text-slate-700">
-              Forgot password?
-            </Link> */}
-          </form>
-
-          <p className="text-center text-sm text-slate-500 mt-4">
-            Setting up a new company?{" "}
-            <Link to="/signup" className="font-medium text-brand-600 hover:underline">
-              Create an account
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+        {/* Password recovery exists in the codebase (ForgotPassword.jsx,
+            ResetPassword.jsx, server/src/routes/auth.js) but isn't wired up
+            to a real email service yet, so the link stays hidden until it is.
+            Until then, an admin can reset an employee's password from Team. */}
+        <p className="text-center text-xs text-ink/50">
+          Forgot your password? Ask your admin to reset it from the Team page.
+        </p>
+      </form>
+    </AuthLayout>
   );
 }

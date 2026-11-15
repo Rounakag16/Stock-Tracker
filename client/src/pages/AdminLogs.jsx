@@ -145,7 +145,7 @@ export default function AdminLogsPage() {
                   onClick={() => toggleAction(opt.value)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
                     selectedActions.includes(opt.value)
-                      ? "bg-brand-600 text-white border-brand-600"
+                      ? "bg-ink text-paper border-ink"
                       : "bg-white text-slate-600 border-line hover:bg-slate-50"
                   }`}
                 >

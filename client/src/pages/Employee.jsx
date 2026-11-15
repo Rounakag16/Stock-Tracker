@@ -252,7 +252,7 @@ export default function EmployeePage() {
                       <div className="flex items-center gap-2">
                         <StatusBadge status={req.status} />
                         {req.status === "pending" && (
-                          <button onClick={() => openEdit(req)} className="text-xs font-semibold text-brand-600 hover:underline">
+                          <button onClick={() => openEdit(req)} className="text-xs font-semibold text-brand-700 hover:underline">
                             Edit
                           </button>
                         )}

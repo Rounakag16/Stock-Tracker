@@ -1,3 +1,12 @@
+import colors from "tailwindcss/colors";
+
+// "Warm builder" palette:
+//   charcoal #1C1917 (ink) · orange #F97316 (brand-500) · cream #FFF7ED (paper) · teal #14B8A6 (accent-500)
+//
+// Two remaps keep every existing page on-palette without touching each
+// class name: the cool `slate` greys become warm `stone` greys, and the
+// green `emerald` used for "success / added" states becomes teal.
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
@@ -5,31 +14,26 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: "#f0fdf4",
-          100: "#dcfce7",
-          200: "#bbf7d0",
-          300: "#86efac",
-          400: "#4ade80",
-          500: "#22c55e",
-          600: "#16a34a",
-          700: "#15803d",
-          800: "#166534",
-          900: "#14532d",
+          50: "#FFF7ED",
+          100: "#FFEDD5",
+          200: "#FED7AA",
+          300: "#FDBA74",
+          400: "#FB923C",
+          500: "#F97316",
+          600: "#EA580C",
+          700: "#C2410C",
+          800: "#9A3412",
+          900: "#7C2D12",
         },
-        ink: "#142018",
-        paper: "#F4F6F3",
-        rust: {
-          50: "#FDF4E9",
-          100: "#FBE8CE",
-          400: "#F0AC5C",
-          500: "#E8963B",
-          600: "#CC7A22",
-          700: "#A8611A",
-        },
-        line: "#DCE3DA",
+        accent: colors.teal,
+        slate: colors.stone,
+        emerald: colors.teal,
+        ink: "#1C1917",
+        paper: "#FFF7ED",
+        line: "#F0E2D0",
       },
       fontFamily: {
-        display: ['"Archivo"', "sans-serif"],
+        display: ['"Plus Jakarta Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
         sans: ['"Inter"', "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ['"IBM Plex Mono"', "ui-monospace", "monospace"],
       },
@@ -39,8 +43,8 @@ export default {
           to: { opacity: "1", transform: "none" },
         },
         floatTag: {
-          "0%, 100%": { transform: "rotate(-3deg) translateY(0)" },
-          "50%": { transform: "rotate(-3deg) translateY(-8px)" },
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
         },
       },
       animation: {

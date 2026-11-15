@@ -1,7 +1,24 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert, PasswordInput } from "../components/ui";
+import { AuthLayout, Field } from "../components/AuthLayout";
 import { post } from "../lib/api";
+
+// Mirrors server/src/lib/slugify.js so people can see their company code
+// before signing up. The server may still add a "-2" if the code is taken.
+function previewSlug(name) {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+const PANEL_POINTS = [
+  "A private workspace just for your business",
+  "Add warehouses, items and employees in minutes",
+  "Import existing stock from an Excel sheet",
+];
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -11,12 +28,18 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [companySlug, setCompanySlug] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
     try {
       const { ok, data } = await post("/auth/register", { companyName, username, password });
 
@@ -33,115 +56,141 @@ export default function SignupPage() {
     }
   }
 
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(companySlug);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard can be blocked (e.g. non-HTTPS); the code is still visible.
+    }
+  }
+
   if (companySlug) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
-          <div className="w-full max-w-sm text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+      <AuthLayout
+        title="Your workspace is ready"
+        subtitle="Share this company code with your employees — they'll enter it when they sign in."
+        panelTitle={
+          <>
+            You're all set. <span className="text-brand-500">Let's add some stock.</span>
+          </>
+        }
+        panelPoints={PANEL_POINTS}
+      >
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-line bg-white p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink/50">Company code</p>
+            <div className="flex items-center justify-between gap-3 mt-2">
+              <p className="font-mono text-xl font-bold text-ink break-all">{companySlug}</p>
+              <button type="button" onClick={copyCode} className="btn-secondary !min-h-0 !py-2 text-sm shrink-0">
+                {copied ? "Copied" : "Copy"}
+              </button>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">You're all set</h1>
-            <p className="text-slate-500 mt-1 mb-6">
-              Share this company code with your employees — they'll need it to sign in.
-            </p>
-
-            <div className="card p-5 mb-6">
-              <p className="text-xs text-slate-500 mb-1">Company Code</p>
-              <p className="text-2xl font-mono font-bold text-brand-600 tracking-wide">{companySlug}</p>
-            </div>
-
-            <button onClick={() => navigate("/admin")} className="btn-primary w-full">
-              Go to Admin Dashboard
-            </button>
+            <p className="text-xs text-ink/50 mt-3">You can always find it later under Settings.</p>
           </div>
+
+          <ol className="space-y-3 text-sm text-ink/70">
+            {["Add your warehouses and items", "Create logins for your employees on the Team page", "Approve their requests as they come in"].map(
+              (step, i) => (
+                <li key={step} className="flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-full bg-brand-100 text-brand-800 text-xs font-bold flex items-center justify-center shrink-0">
+                    {i + 1}
+                  </span>
+                  {step}
+                </li>
+              )
+            )}
+          </ol>
+
+          <button onClick={() => navigate("/admin")} className="btn-primary w-full !py-3.5 text-base">
+            Go to your dashboard
+          </button>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
+  const slug = previewSlug(companyName);
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <Link
-              to="/"
-              className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-ink flex items-center justify-center shadow-lg shadow-ink/20"
-            >
-              <svg className="w-8 h-8 text-paper" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </Link>
-            <h1 className="text-2xl font-bold text-slate-900">Create your company</h1>
-            <p className="text-slate-500 mt-1">Set up a workspace for your shop or team</p>
-          </div>
+    <AuthLayout
+      title="Create your workspace"
+      subtitle="Set up stock tracking for your business. It takes about a minute."
+      panelTitle={
+        <>
+          Know what's on the shelf, <span className="text-brand-500">at every location.</span>
+        </>
+      }
+      panelPoints={PANEL_POINTS}
+      footer={
+        <>
+          Already have a workspace?{" "}
+          <Link to="/login" className="font-semibold text-brand-700 hover:underline">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && <Alert type="error" message={error} onDismiss={() => setError("")} />}
 
-          <form onSubmit={handleSubmit} className="card p-6 space-y-4">
-            {error && <Alert type="error" message={error} onDismiss={() => setError("")} />}
+        <Field
+          id="companyName"
+          label="Business name"
+          hint={
+            slug ? (
+              <>
+                Your company code will be <span className="font-mono font-semibold text-ink/70">{slug}</span>
+              </>
+            ) : (
+              "You can rename it later in Settings."
+            )
+          }
+        >
+          <input
+            id="companyName"
+            type="text"
+            className="input"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            placeholder="e.g. Sharma Hardware"
+            autoComplete="organization"
+            required
+          />
+        </Field>
 
-            <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Company Name
-              </label>
-              <input
-                id="companyName"
-                type="text"
-                className="input"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="e.g. Acme Hardware"
-                autoComplete="organization"
-                required
-              />
-            </div>
+        <Field id="username" label="Admin username" hint="You'll use this to sign in.">
+          <input
+            id="username"
+            type="text"
+            className="input"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="e.g. rounak"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+          />
+        </Field>
 
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Your Admin Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                className="input"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
-                autoComplete="username"
-                required
-              />
-            </div>
+        <Field id="password" label="Password" hint="At least 6 characters.">
+          <PasswordInput
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Create a password"
+            minLength={6}
+            autoComplete="new-password"
+            required
+          />
+        </Field>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Password
-              </label>
-              <PasswordInput
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min. 6 characters"
-                minLength={6}
-                autoComplete="new-password"
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? "Creating..." : "Create Company"}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-slate-500 mt-4">
-            Already have a company?{" "}
-            <Link to="/login" className="font-medium text-brand-600 hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+        <button type="submit" className="btn-primary w-full !py-3.5 text-base" disabled={loading}>
+          {loading ? "Creating workspace…" : "Create workspace"}
+        </button>
+      </form>
+    </AuthLayout>
   );
 }

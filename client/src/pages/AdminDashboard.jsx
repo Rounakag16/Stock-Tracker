@@ -58,7 +58,7 @@ export default function AdminDashboard() {
         </div>
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Total Quantity</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-600 mt-1 tabular-nums font-mono">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-700 mt-1 tabular-nums font-mono">
             {stats?.totalQuantity ?? 0}
           </p>
         </div>
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
         </div>
         <Link to="/admin/requests" className="stat-card hover:border-brand-300 transition-colors block">
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Pending Requests</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-600 mt-1 tabular-nums font-mono">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-700 mt-1 tabular-nums font-mono">
             {stats?.pendingRequests ?? 0}
           </p>
         </Link>
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
                     <p className="font-medium text-slate-900">{wh.name}</p>
                     <p className="text-xs text-slate-500">{wh.item_count} {wh.item_count === 1 ? "item" : "items"}</p>
                   </div>
-                  <p className="text-lg lg:text-xl font-mono font-bold text-brand-600 tabular-nums">{wh.total_qty}</p>
+                  <p className="text-lg lg:text-xl font-mono font-bold text-brand-700 tabular-nums">{wh.total_qty}</p>
                 </div>
               ))}
             </div>

@@ -175,7 +175,7 @@ export function AdminNav({ username, companyName }) {
                 key={link.href}
                 to={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] ${active ? "text-brand-600" : "text-slate-500"}`}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] ${active ? "text-brand-700" : "text-slate-500"}`}
               >
                 <NavIcon d={link.icon} active={active} />
                 <span className="text-[11px] font-medium">{link.label}</span>
@@ -185,7 +185,7 @@ export function AdminNav({ username, companyName }) {
           <button
             onClick={() => setShowMore(true)}
             aria-haspopup="dialog"
-            className={`flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] ${moreActive ? "text-brand-600" : "text-slate-500"}`}
+            className={`flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] ${moreActive ? "text-brand-700" : "text-slate-500"}`}
           >
             <NavIcon d={MORE_ICON} active={moreActive} />
             <span className="text-[11px] font-medium">More</span>
