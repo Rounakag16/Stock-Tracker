@@ -40,7 +40,7 @@ router.post(
       }
       const valid = await bcrypt.compare(currentPassword, target.passwordHash);
       if (!valid) {
-        return res.status(401).json({ error: "Current password is incorrect" });
+        return res.status(400).json({ error: "Current password is incorrect" });
       }
     } else if (target.role !== "employee") {
       return res.status(400).json({ error: "Can only reset employee passwords" });

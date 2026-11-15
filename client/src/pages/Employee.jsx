@@ -20,6 +20,8 @@ export default function EmployeePage() {
   const [items, setItems] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
+  const [recentDecisions, setRecentDecisions] = useState([]);
+  const [showDecisions, setShowDecisions] = useState(false);
   const [username, setUsername] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -74,8 +76,12 @@ export default function EmployeePage() {
   }, []);
 
   const loadRequests = useCallback(async () => {
-    const { data } = await get("/stock/requests?status=pending");
-    setMyRequests(data.requests || []);
+    // One call for both lists: pending requests the employee can still
+    // edit, and their most recent approved/denied ones (with any note).
+    const { data } = await get("/stock/requests?status=all&limit=50");
+    const all = data.requests || [];
+    setMyRequests(all.filter((r) => r.status === "pending"));
+    setRecentDecisions(all.filter((r) => r.status !== "pending").slice(0, 10));
   }, []);
 
   useEffect(() => {
@@ -143,6 +149,8 @@ export default function EmployeePage() {
     }
 
     setSuccess("Request submitted — waiting for admin approval");
+    setPartyName("");
+    setAmount("");
     setShowModal(false);
     loadRequests();
   }
@@ -253,6 +261,52 @@ export default function EmployeePage() {
                     <p className="text-slate-700">{req.item_name} × <span className="font-mono">{req.quantity}</span></p>
                     <p className="text-slate-500">Party: {req.party_name}</p>
                     <p className="text-slate-500">Date: {formatDateKey(req.entry_date)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {recentDecisions.length > 0 && (
+          <div className="mb-4">
+            <button
+              onClick={() => setShowDecisions(!showDecisions)}
+              className="w-full card p-4 flex items-center justify-between text-left"
+            >
+              <div>
+                <p className="font-semibold text-slate-900">Recent decisions</p>
+                <p className="text-sm text-slate-500">
+                  {recentDecisions.filter((r) => r.status === "approved").length} approved ·{" "}
+                  {recentDecisions.filter((r) => r.status === "denied").length} denied
+                </p>
+              </div>
+              <svg
+                className={`w-5 h-5 text-slate-400 transition-transform ${showDecisions ? "rotate-180" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {showDecisions && (
+              <div className="mt-2 space-y-2">
+                {recentDecisions.map((req) => (
+                  <div key={req.id} className="card p-3 text-sm">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-medium">{actionWord(req.action)}</span>
+                      <StatusBadge status={req.status} />
+                    </div>
+                    <p className="text-slate-700">{req.item_name} × <span className="font-mono">{req.quantity}</span></p>
+                    <p className="text-slate-500">Party: {req.party_name}</p>
+                    <p className="text-slate-500">Date: {formatDateKey(req.entry_date)}</p>
+                    {req.review_note && <p className="text-slate-500 italic">Note: {req.review_note}</p>}
+                    {req.reviewer_name && req.reviewed_at && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        By {req.reviewer_name} · {new Date(req.reviewed_at).toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>

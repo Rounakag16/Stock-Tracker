@@ -14,6 +14,7 @@ export default function AdminWarehousesPage() {
   const [renaming, setRenaming] = useState(false);
 
   const [error, setError] = useState("");
+  const [pageError, setPageError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -73,11 +74,14 @@ export default function AdminWarehousesPage() {
 
   async function handleDelete(warehouse) {
     if (!confirm(`Delete "${warehouse.name}" and all its stock? This cannot be undone.`)) return;
-    const { ok } = await del(`/warehouses/${warehouse.id}`);
-    if (ok) {
-      setSuccess("Warehouse deleted");
-      loadData();
+    setPageError("");
+    const { ok, data } = await del(`/warehouses/${warehouse.id}`);
+    if (!ok) {
+      setPageError(data.error);
+      return;
     }
+    setSuccess("Warehouse deleted");
+    loadData();
   }
 
   if (loading) return <LoadingSpinner />;
@@ -99,6 +103,7 @@ export default function AdminWarehousesPage() {
         </div>
 
         {success && <div className="mb-4"><Alert type="success" message={success} onDismiss={() => setSuccess("")} /></div>}
+        {pageError && <div className="mb-4"><Alert type="error" message={pageError} onDismiss={() => setPageError("")} /></div>}
 
         {warehouses.length === 0 ? (
           <EmptyState title="No warehouses" description="Create your first warehouse to start tracking stock" />

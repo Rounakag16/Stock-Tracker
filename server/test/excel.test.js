@@ -105,6 +105,10 @@ test("upload adds to an existing item's quantity instead of replacing it", async
   };
   mock.method(Warehouse, "find", async () => [{ _id: "wh-1", name: "Downtown" }]);
   mock.method(StockItem, "findOne", async () => existing);
+  const update = mock.method(StockItem, "findOneAndUpdate", async (filter, change) => ({
+    ...existing,
+    quantity: existing.quantity + change.$inc.quantity,
+  }));
   const logCreate = mock.method(ActivityLog, "create", async () => ({}));
 
   const server = await startApp();
@@ -113,7 +117,10 @@ test("upload adds to an existing item's quantity instead of replacing it", async
 
     assert.equal(res.status, 200);
     assert.deepEqual({ created: res.body.created, updated: res.body.updated }, { created: 0, updated: 1 });
-    assert.equal(existing.quantity, 65, "50 existing + 15 uploaded, not replaced with 15");
+    // Applied as an atomic $inc of the uploaded amount, not a $set to 15.
+    const change = update.mock.calls[0].arguments[1];
+    assert.equal(change.$inc.quantity, 15, "50 existing + 15 uploaded, not replaced with 15");
+    assert.equal(change.$set.quantity, undefined);
 
     const logged = logCreate.mock.calls[0].arguments[0];
     assert.equal(logged.action, "add_quantity");

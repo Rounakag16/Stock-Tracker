@@ -8,6 +8,10 @@ const { applyStockAdjust, applyStockMove, logActivity } = require("../lib/stockO
 const { notifyAdmins, notifyUser } = require("../lib/notify");
 const { actionWord } = require("../lib/labels");
 const { asyncHandler } = require("../lib/asyncHandler");
+const { resolveEntryDate, toDateKey } = require("../lib/dates");
+const { alertIfLowStock } = require("../lib/lowStockAlerts");
+
+const STATUSES = ["pending", "approved", "denied"];
 
 const router = express.Router();
 
@@ -24,11 +28,13 @@ function serialize(reqDoc) {
     party_name: reqDoc.partyName,
     from_warehouse_id: reqDoc.fromWarehouseId?._id || reqDoc.fromWarehouseId,
     to_warehouse_id: reqDoc.toWarehouseId?._id || reqDoc.toWarehouseId || null,
+    entry_date: reqDoc.entryDate || (reqDoc.createdAt ? toDateKey(reqDoc.createdAt) : null),
     status: reqDoc.status,
     review_note: reqDoc.reviewNote,
     created_at: reqDoc.createdAt,
     requester_name: reqDoc.userId?.username || "Deleted user",
-    item_name: reqDoc.itemId?.name,
+    item_name: reqDoc.itemId?.name || "Deleted item",
+    reviewed_at: reqDoc.reviewedAt,
     from_warehouse_name: reqDoc.fromWarehouseId?.name,
     to_warehouse_name: reqDoc.toWarehouseId?.name || null,
     reviewer_name: reqDoc.reviewedBy?.username || (reqDoc.reviewedAt ? "Deleted user" : null),
@@ -40,24 +46,31 @@ router.get(
   "/",
   requireAuth(),
   asyncHandler(async (req, res) => {
+  // status=all returns every status (most recent first, capped) - used
+  // for the employee's "recent decisions" list and the admin history view.
   const status = req.query.status || "pending";
-  const filter = { companyId: req.session.companyId, status };
+  if (status !== "all" && !STATUSES.includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+  const filter = { companyId: req.session.companyId };
+  if (status !== "all") filter.status = status;
   if (req.session.role === "employee") {
     filter.userId = req.session.userId;
   }
+  const limit = Math.min(parseInt(req.query.limit, 10) || 200, 500);
 
   const requests = await StockRequest.find(filter)
     .sort({ createdAt: -1 })
+    .limit(limit)
     .populate("userId", "username")
     .populate("itemId", "name")
     .populate("fromWarehouseId", "name")
     .populate("toWarehouseId", "name")
     .populate("reviewedBy", "username");
 
-  const pendingCount = await StockRequest.countDocuments({
-    companyId: req.session.companyId,
-    status: "pending",
-  });
+  const pendingFilter = { companyId: req.session.companyId, status: "pending" };
+  if (req.session.role === "employee") pendingFilter.userId = req.session.userId;
+  const pendingCount = await StockRequest.countDocuments(pendingFilter);
 
     return res.json({ requests: requests.map(serialize), pendingCount });
   })
@@ -69,7 +82,8 @@ router.post(
   requireAuth(["employee"]),
   asyncHandler(async (req, res) => {
   try {
-    const { itemId, amount, type, partyName, toWarehouseId } = req.body;
+    const { itemId, amount, type, partyName, toWarehouseId, date } = req.body;
+    const entryDate = resolveEntryDate(date);
 
     if (!itemId || !amount || !type || !partyName?.trim()) {
       return res.status(400).json({ error: "Item, amount, type, and party name are required" });
@@ -112,6 +126,7 @@ router.post(
       partyName: party,
       fromWarehouseId: item.warehouseId,
       toWarehouseId: destId,
+      entryDate,
     });
 
     await logActivity({
@@ -124,6 +139,7 @@ router.post(
       quantityChange: type === "deduct" || type === "move" ? -qty : qty,
       details: `Submitted ${actionWord(type)} request for ${qty} of "${item.name}" — Party: ${party}`,
       partyName: party,
+      entryDate,
     });
 
     await notifyAdmins({
@@ -136,6 +152,7 @@ router.post(
 
     return res.json({ request: { id: request._id, status: "pending" } });
   } catch (err) {
+      if (err.status === 400) return res.status(400).json({ error: err.message });
       console.error(err);
       return res.status(500).json({ error: "Something went wrong" });
     }
@@ -159,8 +176,11 @@ async function resolveEdit(reqDoc, edits) {
     throw new Error("Amount must be a positive number");
   }
 
-  const party = edits.partyName !== undefined ? edits.partyName.trim() : reqDoc.partyName;
+  const party = edits.partyName !== undefined ? String(edits.partyName ?? "").trim() : reqDoc.partyName;
   if (!party) throw new Error("Party name is required");
+
+  const entryDate =
+    edits.date !== undefined ? resolveEntryDate(edits.date) : reqDoc.entryDate || resolveEntryDate(null);
 
   const item = await StockItem.findOne({ _id: reqDoc.itemId, companyId: reqDoc.companyId });
   if (!item) throw new Error("Item not found");
@@ -181,7 +201,7 @@ async function resolveEdit(reqDoc, edits) {
     destId = rawDest;
   }
 
-  return { type, qty, party, destId, itemName: item.name, warehouseId: item.warehouseId };
+  return { type, qty, party, destId, entryDate, itemName: item.name, warehouseId: item.warehouseId };
 }
 
 async function persistEdit(reqDoc, resolved, editorId, editorLabel) {
@@ -189,6 +209,7 @@ async function persistEdit(reqDoc, resolved, editorId, editorLabel) {
   reqDoc.quantity = resolved.qty;
   reqDoc.partyName = resolved.party;
   reqDoc.toWarehouseId = resolved.destId;
+  reqDoc.entryDate = resolved.entryDate;
   await reqDoc.save();
 
   await logActivity({
@@ -199,6 +220,7 @@ async function persistEdit(reqDoc, resolved, editorId, editorLabel) {
     action: "request_edited",
     details: `${editorLabel} edited ${actionWord(resolved.type)} request for ${resolved.qty} of "${resolved.itemName}" — Party: ${resolved.party}`,
     partyName: resolved.party,
+    entryDate: resolved.entryDate,
   });
 }
 
@@ -263,12 +285,24 @@ router.post(
     const requester = await User.findById(reqDoc.userId);
     const requesterName = requester ? requester.username : "employee";
 
+    const trimmedNote = typeof note === "string" && note.trim() ? note.trim() : null;
+
     if (action === "deny") {
-      reqDoc.status = "denied";
-      reqDoc.reviewedBy = req.session.userId;
-      reqDoc.reviewedAt = new Date();
-      reqDoc.reviewNote = note?.trim() || null;
-      await reqDoc.save();
+      // Atomic claim: only one reviewer can move a request out of pending,
+      // even if two admins click at the same moment.
+      const claimed = await StockRequest.findOneAndUpdate(
+        { _id: reqDoc._id, status: "pending" },
+        {
+          $set: {
+            status: "denied",
+            reviewedBy: req.session.userId,
+            reviewedAt: new Date(),
+            reviewNote: trimmedNote,
+          },
+        },
+        { new: true }
+      );
+      if (!claimed) return res.status(409).json({ error: "Request already reviewed" });
 
       await logActivity({
         companyId: req.session.companyId,
@@ -277,8 +311,9 @@ router.post(
         itemId: reqDoc.itemId,
         itemName,
         action: "request_denied",
-        details: `Denied ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})${note ? ` — ${note}` : ""}`,
+        details: `Denied ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})${trimmedNote ? ` — ${trimmedNote}` : ""}`,
         partyName: reqDoc.partyName,
+        entryDate: reqDoc.entryDate,
       });
 
       await notifyUser({
@@ -286,7 +321,7 @@ router.post(
         userId: reqDoc.userId,
         type: "request_denied",
         title: `Your ${actionWord(reqDoc.action)} request was denied`,
-        message: `${reqDoc.quantity} of "${itemName}"${note ? ` — ${note}` : ""}`,
+        message: `${reqDoc.quantity} of "${itemName}"${trimmedNote ? ` — ${trimmedNote}` : ""}`,
         link: "/employee",
       });
 
@@ -299,33 +334,61 @@ router.post(
       await persistEdit(reqDoc, resolved, req.session.userId, "Admin");
     }
 
-    if (reqDoc.action === "add" || reqDoc.action === "deduct") {
-      await applyStockAdjust({
-        companyId: req.session.companyId,
-        itemId: reqDoc.itemId,
-        type: reqDoc.action,
-        qty: reqDoc.quantity,
-        userId: req.session.userId,
-        partyName: reqDoc.partyName,
-      });
-    } else if (reqDoc.action === "move") {
-      if (!reqDoc.toWarehouseId) throw new Error("Missing destination warehouse");
-      await applyStockMove({
-        companyId: req.session.companyId,
-        itemId: reqDoc.itemId,
-        fromWarehouseId: reqDoc.fromWarehouseId,
-        toWarehouseId: reqDoc.toWarehouseId,
-        qty: reqDoc.quantity,
-        userId: req.session.userId,
-        partyName: reqDoc.partyName,
-      });
+    // Claim the request before touching stock so a double-click (or two
+    // admins approving at once) can never apply the same change twice. If
+    // the stock change then fails, it's released back to pending.
+    const claimed = await StockRequest.findOneAndUpdate(
+      { _id: reqDoc._id, status: "pending" },
+      {
+        $set: {
+          status: "approved",
+          reviewedBy: req.session.userId,
+          reviewedAt: new Date(),
+          reviewNote: trimmedNote,
+        },
+      },
+      { new: true }
+    );
+    if (!claimed) return res.status(409).json({ error: "Request already reviewed" });
+
+    let beforeQty = null;
+    try {
+      if (reqDoc.action === "add" || reqDoc.action === "deduct") {
+        const result = await applyStockAdjust({
+          companyId: req.session.companyId,
+          itemId: reqDoc.itemId,
+          type: reqDoc.action,
+          qty: reqDoc.quantity,
+          userId: req.session.userId,
+          partyName: reqDoc.partyName,
+          entryDate: reqDoc.entryDate,
+        });
+        beforeQty = result.currentQuantity - (result.after - result.before);
+      } else if (reqDoc.action === "move") {
+        if (!reqDoc.toWarehouseId) throw new Error("Missing destination warehouse");
+        const result = await applyStockMove({
+          companyId: req.session.companyId,
+          itemId: reqDoc.itemId,
+          fromWarehouseId: reqDoc.fromWarehouseId,
+          toWarehouseId: reqDoc.toWarehouseId,
+          qty: reqDoc.quantity,
+          userId: req.session.userId,
+          partyName: reqDoc.partyName,
+          entryDate: reqDoc.entryDate,
+        });
+        beforeQty = result.newSourceQty + reqDoc.quantity;
+      }
+    } catch (err) {
+      await StockRequest.updateOne(
+        { _id: reqDoc._id, status: "approved" },
+        { $set: { status: "pending", reviewedBy: null, reviewedAt: null, reviewNote: null } }
+      );
+      throw err;
     }
 
-    reqDoc.status = "approved";
-    reqDoc.reviewedBy = req.session.userId;
-    reqDoc.reviewedAt = new Date();
-    reqDoc.reviewNote = note?.trim() || null;
-    await reqDoc.save();
+    if (beforeQty !== null) {
+      await alertIfLowStock({ companyId: req.session.companyId, itemId: reqDoc.itemId, before: beforeQty });
+    }
 
     await logActivity({
       companyId: req.session.companyId,
@@ -338,6 +401,7 @@ router.post(
         reqDoc.action === "deduct" || reqDoc.action === "move" ? -reqDoc.quantity : reqDoc.quantity,
       details: `Approved ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})`,
       partyName: reqDoc.partyName,
+      entryDate: reqDoc.entryDate,
     });
 
     await notifyUser({

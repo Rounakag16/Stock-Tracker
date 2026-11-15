@@ -10,7 +10,7 @@ import {
   formatDateKey,
   LOG_ACTION_OPTIONS,
 } from "../components/ui";
-import { get } from "../lib/api";
+import { get, download } from "../lib/api";
 
 // Movement columns, in display order. "removed" (stock lost when an item or
 // warehouse was deleted) only shows up when that day actually had some.
@@ -116,7 +116,9 @@ export default function AdminDailyPage() {
   const isToday = date === today;
 
   function exportDayLogs() {
-    window.location.href = `/api/logs/export?startDate=${date}&endDate=${date}`;
+    const params = new URLSearchParams({ startDate: date, endDate: date });
+    if (warehouseId) params.set("warehouseId", warehouseId);
+    download(`/logs/export?${params}`, `activity-logs-${date}.xlsx`).then((r) => !r.ok && setError(r.error));
   }
 
   return (

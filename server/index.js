@@ -4,6 +4,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { connectDb } = require("./src/lib/db");
+const { backfillEntryDates } = require("./src/lib/backfill");
 
 const authRoutes = require("./src/routes/auth");
 const companyRoutes = require("./src/routes/company");
@@ -16,6 +17,7 @@ const dashboardRoutes = require("./src/routes/dashboard");
 const logRoutes = require("./src/routes/logs");
 const notificationRoutes = require("./src/routes/notifications");
 const tagRoutes = require("./src/routes/tags");
+const reportRoutes = require("./src/routes/reports");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -30,7 +32,9 @@ const PORT = process.env.PORT || 4000;
 // would need a higher number here instead.
 app.set("trust proxy", 1);
 
-app.use(express.json());
+// Stock uploads arrive as a base64-encoded .xlsx inside the JSON body, so
+// the default 100kb limit would reject any real-world spreadsheet.
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
 // In development the React app runs on its own Vite dev server (port 5173)
@@ -56,8 +60,13 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/logs", logRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/tags", tagRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
+
+// Unknown API routes get a JSON 404 rather than an HTML page the client
+// can't parse.
+app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));
 
 // Serve the built React app (npm run build in /client outputs to
 // /client/dist). Any route that isn't an API call falls through to
@@ -75,9 +84,20 @@ app.get(/^(?!\/api\/).*/, (req, res) => {
 // instead of an outage for every company using the app.
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error(err);
-  const status = err.status || 500;
-  res.status(status).json({ error: status === 500 ? "Something went wrong" : err.message });
+  // Malformed ids (e.g. /api/stock/not-an-id) are client errors, not
+  // server faults — answer 400 instead of logging a 500.
+  if (err.name === "CastError") {
+    return res.status(400).json({ error: `Invalid ${err.path || "value"}` });
+  }
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({ error: "That upload is too large (max 10 MB)" });
+  }
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({ error: "Request body is not valid JSON" });
+  }
+  const status = err.status || err.statusCode || 500;
+  if (status >= 500) console.error(err);
+  return res.status(status).json({ error: status >= 500 ? "Something went wrong" : err.message });
 });
 
 // Absolute last resort — logs anything that somehow still slips through
@@ -91,7 +111,14 @@ process.on("uncaughtException", (err) => {
 });
 
 connectDb()
-  .then(() => {
+  .then(async () => {
+    try {
+      await backfillEntryDates();
+    } catch (err) {
+      // Non-fatal: the app still works, older rows just won't show up in
+      // date filters until the next successful start.
+      console.error("entryDate backfill failed:", err.message);
+    }
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });

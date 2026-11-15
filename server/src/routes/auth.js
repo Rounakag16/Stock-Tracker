@@ -34,19 +34,31 @@ router.post("/register", registerLimiter, async (req, res) => {
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
+    let company = null;
     const trimmedCompany = companyName.trim();
     const trimmedUsername = username.trim();
     const slug = await uniqueSlug(trimmedCompany);
 
-    const company = await Company.create({ name: trimmedCompany, slug });
-    const passwordHash = bcrypt.hashSync(password, 10);
-    const user = await User.create({
-      companyId: company._id,
-      username: trimmedUsername,
-      passwordHash,
-      role: "admin",
-    });
-    await Warehouse.create({ companyId: company._id, name: "Main Warehouse" });
+    company = await Company.create({ name: trimmedCompany, slug });
+    const passwordHash = await bcrypt.hash(password, 10);
+    let user;
+    try {
+      user = await User.create({
+        companyId: company._id,
+        username: trimmedUsername,
+        passwordHash,
+        role: "admin",
+      });
+      await Warehouse.create({ companyId: company._id, name: "Main Warehouse" });
+    } catch (err) {
+      // Don't leave a half-created workspace behind if seeding fails.
+      await Promise.all([
+        User.deleteMany({ companyId: company._id }),
+        Warehouse.deleteMany({ companyId: company._id }),
+        Company.deleteOne({ _id: company._id }),
+      ]).catch(() => {});
+      throw err;
+    }
 
     const token = createToken({
       userId: user._id.toString(),
@@ -76,7 +88,7 @@ router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { companySlug, username, password } = req.body;
 
-    if (!companySlug?.trim() || !username || !password) {
+    if (!companySlug?.trim() || !username?.trim() || !password) {
       return res.status(400).json({
         error: "Company code, username, and password are required",
       });
@@ -87,7 +99,9 @@ router.post("/login", loginLimiter, async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const user = await User.findOne({ companyId: company._id, username });
+    // Usernames are stored trimmed, so a stray space typed on a phone
+    // keyboard shouldn't make a valid login fail.
+    const user = await User.findOne({ companyId: company._id, username: String(username).trim() });
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }

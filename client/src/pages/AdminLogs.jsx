@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { LoadingSpinner, EmptyState, ActionLabel, Alert, LOG_ACTION_OPTIONS, formatDateKey } from "../components/ui";
-import { get } from "../lib/api";
+import { get, download } from "../lib/api";
 
 export default function AdminLogsPage() {
   const [logs, setLogs] = useState([]);
@@ -76,7 +76,8 @@ export default function AdminLogsPage() {
   }
 
   function handleExport() {
-    window.location.href = `/api/logs/export?${buildQuery(0)}`;
+    setError("");
+    download(`/logs/export?${buildQuery(0)}`, "activity-logs.xlsx").then((r) => !r.ok && setError(r.error));
   }
 
   const hasActiveFilters = startDate || endDate || selectedActions.length > 0;

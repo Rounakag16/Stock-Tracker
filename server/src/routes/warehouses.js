@@ -3,6 +3,7 @@ const Warehouse = require("../models/Warehouse");
 const StockItem = require("../models/StockItem");
 const { requireAuth } = require("../middleware/auth");
 const { logActivity } = require("../lib/stockOps");
+const { closePendingRequestsForItems } = require("../lib/requestCleanup");
 const { asyncHandler } = require("../lib/asyncHandler");
 
 const router = express.Router();
@@ -101,8 +102,33 @@ router.delete(
       return res.status(404).json({ error: "Warehouse not found" });
     }
 
+    const items = await StockItem.find({ warehouseId: warehouse._id, companyId: req.session.companyId });
     await StockItem.deleteMany({ warehouseId: warehouse._id, companyId: req.session.companyId });
     await warehouse.deleteOne();
+    await closePendingRequestsForItems({
+      companyId: req.session.companyId,
+      itemIds: items.map((i) => i._id),
+      warehouseId: warehouse._id,
+      reviewerId: req.session.userId,
+      reason: `Warehouse "${warehouse.name}" was deleted`,
+    });
+
+    // One delete_item row per item, so the stock that left with the
+    // warehouse is accounted for in day-wise opening/closing history.
+    for (const item of items) {
+      await logActivity({
+        companyId: req.session.companyId,
+        userId: req.session.userId,
+        warehouseId: warehouse._id,
+        itemId: item._id,
+        itemName: item.name,
+        action: "delete_item",
+        quantityBefore: item.quantity,
+        quantityAfter: 0,
+        quantityChange: -item.quantity,
+        details: `Deleted item "${item.name}" with warehouse "${warehouse.name}"`,
+      });
+    }
 
     await logActivity({
       companyId: req.session.companyId,

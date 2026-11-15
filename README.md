@@ -24,6 +24,8 @@ In production, the Express server also serves the built React app as static file
 - **Editable pending requests**: employees can edit their own request until it's reviewed; admins can edit a request's details in the same step as approving it
 - **Multi-warehouse**: track stock across locations, with transfers between warehouses
 - **Activity Logs**: full audit trail of who did what and when
+- **Date-wise entries**: every add / sale / move / upload / request carries a user-chosen date (backdating allowed, future dates not); backdated sales and moves are rejected if they'd make stock negative on any day since
+- **Daily Stock report** (`/admin/daily`): opening and closing stock per item for any day, with added / sold / moved / adjusted breakdown and that day's individual entries
 
 ## Prerequisites
 
@@ -82,6 +84,7 @@ Then visit whatever port your server is listening on (default `4000`, or whateve
 | `NODE_ENV`      | No               | Set to `production` when deployed                                                                                                                               |
 | `PORT`          | No               | Defaults to `4000`                                                                                                                                              |
 | `CLIENT_ORIGIN` | No               | Only used in development, for CORS                                                                                                                              |
+| `APP_TIMEZONE`  | No               | IANA timezone that decides which calendar day "today" is for stock entries (default `Asia/Kolkata`).                                                             |
 
 ## Deploying
 

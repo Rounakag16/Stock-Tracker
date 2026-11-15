@@ -6,6 +6,9 @@ const { requireAuth } = require("../middleware/auth");
 const { applyStockAdjust, applyStockMove, logActivity } = require("../lib/stockOps");
 const { buildWorkbookBuffer, parseWorkbookRows } = require("../lib/excel");
 const { asyncHandler } = require("../lib/asyncHandler");
+const { resolveEntryDate } = require("../lib/dates");
+const { alertIfLowStock } = require("../lib/lowStockAlerts");
+const { closePendingRequestsForItems } = require("../lib/requestCleanup");
 
 const router = express.Router();
 
@@ -47,7 +50,8 @@ router.post(
   "/",
   requireAuth(["admin"]),
   asyncHandler(async (req, res) => {
-    const { warehouseId, name, quantity, partyName, category, lowStockThreshold } = req.body;
+    const { warehouseId, name, quantity, partyName, category, lowStockThreshold, date } = req.body;
+    const entryDate = resolveEntryDate(date);
 
     if (!warehouseId || !name?.trim()) {
       return res.status(400).json({ error: "Warehouse and item name are required" });
@@ -98,6 +102,7 @@ router.post(
         quantityChange: qty,
         details: `Created item "${trimmed}" in ${warehouse.name}${party ? ` (Party: ${party})` : ""}`,
         partyName: party,
+        entryDate,
       });
 
       return res.json({ item: serializeItem(item) });
@@ -125,19 +130,25 @@ router.patch(
     const { name, partyName, category, lowStockThreshold } = req.body;
     const changes = [];
 
+    for (const [field, value] of Object.entries({ name, partyName, category })) {
+      if (value !== undefined && value !== null && typeof value !== "string") {
+        return res.status(400).json({ error: `Invalid ${field}` });
+      }
+    }
+
     if (name !== undefined) {
-      const trimmed = name.trim();
+      const trimmed = (name || "").trim();
       if (!trimmed) return res.status(400).json({ error: "Item name is required" });
       if (trimmed !== item.name) changes.push(`name "${item.name}" → "${trimmed}"`);
       item.name = trimmed;
     }
     if (partyName !== undefined) {
-      const trimmed = partyName.trim() || null;
+      const trimmed = (partyName || "").trim() || null;
       if (trimmed !== item.partyName) changes.push(`party "${item.partyName || "—"}" → "${trimmed || "—"}"`);
       item.partyName = trimmed;
     }
     if (category !== undefined) {
-      const trimmed = category.trim() || null;
+      const trimmed = (category || "").trim() || null;
       if (trimmed !== item.category) changes.push(`category "${item.category || "—"}" → "${trimmed || "—"}"`);
       item.category = trimmed;
     }
@@ -196,6 +207,12 @@ router.delete(
     const warehouse = await Warehouse.findOne({ _id: item.warehouseId, companyId: req.session.companyId });
 
     await item.deleteOne();
+    await closePendingRequestsForItems({
+      companyId: req.session.companyId,
+      itemIds: [item._id],
+      reviewerId: req.session.userId,
+      reason: `Item "${item.name}" was deleted`,
+    });
 
     await logActivity({
       companyId: req.session.companyId,
@@ -218,7 +235,8 @@ router.post(
   "/adjust",
   requireAuth(["admin"]),
   asyncHandler(async (req, res) => {
-    const { itemId, amount, type, partyName } = req.body;
+    const { itemId, amount, type, partyName, date } = req.body;
+    const entryDate = resolveEntryDate(date);
 
     if (!itemId || amount === undefined || amount === null || amount === "" || !type) {
       return res.status(400).json({ error: "Item, amount, and type are required" });
@@ -243,9 +261,16 @@ router.post(
         qty,
         userId: req.session.userId,
         partyName: partyName?.trim() || null,
+        entryDate,
       });
 
-      return res.json({ item: { ...serializeItem(result.item), quantity: result.after } });
+      await alertIfLowStock({
+        companyId: req.session.companyId,
+        itemId: result.item._id,
+        before: result.currentQuantity - (result.after - result.before),
+      });
+
+      return res.json({ item: { ...serializeItem(result.item), quantity: result.currentQuantity } });
     } catch (err) {
       // applyStockAdjust throws plain validation Errors (e.g. "Insufficient
       // stock") that are safe to show the user as-is.
@@ -258,7 +283,8 @@ router.post(
   "/transfer",
   requireAuth(["admin"]),
   asyncHandler(async (req, res) => {
-    const { itemId, fromWarehouseId, toWarehouseId, quantity, partyName } = req.body;
+    const { itemId, fromWarehouseId, toWarehouseId, quantity, partyName, date } = req.body;
+    const entryDate = resolveEntryDate(date);
 
     if (!itemId || !fromWarehouseId || !toWarehouseId || !quantity) {
       return res.status(400).json({ error: "All fields are required" });
@@ -280,6 +306,13 @@ router.post(
         qty,
         userId: req.session.userId,
         partyName: partyName?.trim() || null,
+        entryDate,
+      });
+
+      await alertIfLowStock({
+        companyId: req.session.companyId,
+        itemId,
+        before: result.newSourceQty + qty,
       });
 
       return res.json({
@@ -369,7 +402,8 @@ router.post(
   "/import",
   requireAuth(["admin"]),
   asyncHandler(async (req, res) => {
-    const { file } = req.body;
+    const { file, date } = req.body;
+    const entryDate = resolveEntryDate(date);
     if (!file || typeof file !== "string") {
       return res.status(400).json({ error: "A file is required" });
     }
@@ -438,14 +472,19 @@ router.post(
       const existing = await StockItem.findOne({ companyId: req.session.companyId, warehouseId: warehouse._id, name });
 
       if (existing) {
-        const before = existing.quantity;
-        const after = before + quantity;
-        existing.quantity = after;
-        existing.category = category ?? existing.category;
-        existing.partyName = partyName ?? existing.partyName;
-        if (threshold !== null) existing.lowStockThreshold = threshold;
-        existing.updatedAt = new Date();
-        await existing.save();
+        // Atomic $inc (not read-modify-save) so a concurrent sale or a
+        // second upload can't overwrite each other's quantity change.
+        const $set = { updatedAt: new Date() };
+        if (category !== null) $set.category = category;
+        if (partyName !== null) $set.partyName = partyName;
+        if (threshold !== null) $set.lowStockThreshold = threshold;
+        const saved = await StockItem.findOneAndUpdate(
+          { _id: existing._id, companyId: req.session.companyId },
+          { $inc: { quantity }, $set },
+          { new: true }
+        );
+        const after = saved ? saved.quantity : existing.quantity + quantity;
+        const before = after - quantity;
         updated++;
 
         await logActivity({
@@ -460,6 +499,7 @@ router.post(
           quantityChange: quantity,
           details: `Added ${quantity} of "${existing.name}" via Excel upload (was ${before}, now ${after})`,
           partyName,
+          entryDate,
         });
       } else {
         const item = await StockItem.create({
@@ -485,6 +525,7 @@ router.post(
           quantityChange: quantity,
           details: `Created "${item.name}" via Excel upload`,
           partyName,
+          entryDate,
         });
       }
     }

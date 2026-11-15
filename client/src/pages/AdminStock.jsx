@@ -12,7 +12,7 @@ import {
   todayKey,
   formatDateKey,
 } from "../components/ui";
-import { get, post, patch, del } from "../lib/api";
+import { get, post, patch, del, download } from "../lib/api";
 
 // Summary shown before an admin action actually runs — admin actions apply
 // immediately with no second approver, so this stands in for that missing
@@ -217,6 +217,7 @@ export default function AdminStockPage() {
   const fileInputRef = useRef(null);
 
   const [error, setError] = useState("");
+  const [pageError, setPageError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -278,11 +279,14 @@ export default function AdminStockPage() {
 
   async function handleDelete(item) {
     if (!confirm(`Delete "${item.name}" from ${item.warehouse_name}?`)) return;
-    const { ok } = await del(`/stock/${item.id}`);
-    if (ok) {
-      setSuccess("Item deleted");
-      loadData();
+    setPageError("");
+    const { ok, data } = await del(`/stock/${item.id}`);
+    if (!ok) {
+      setPageError(data.error);
+      return;
     }
+    setSuccess("Item deleted");
+    loadData();
   }
 
   // --- Add stock / Record sale ---
@@ -461,13 +465,14 @@ export default function AdminStockPage() {
   // --- CSV export / import ---
 
   function handleExport() {
-    window.location.href = "/api/stock/export";
+    setPageError("");
+    download("/stock/export", "stock.xlsx").then((r) => !r.ok && setPageError(r.error));
   }
 
   // Generated server-side so the example row uses this company's real
   // warehouse and tag names.
   function downloadTemplate() {
-    window.location.href = "/api/stock/template";
+    download("/stock/template", "stock-upload-template.xlsx").then((r) => !r.ok && setImportError(r.error));
   }
 
   function openImport() {
@@ -560,6 +565,7 @@ export default function AdminStockPage() {
         </div>
 
         {success && <div className="mb-4"><Alert type="success" message={success} onDismiss={() => setSuccess("")} /></div>}
+        {pageError && <div className="mb-4"><Alert type="error" message={pageError} onDismiss={() => setPageError("")} /></div>}
 
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <input

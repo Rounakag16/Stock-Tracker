@@ -5,6 +5,8 @@ const Warehouse = require("../models/Warehouse");
 const StockItem = require("../models/StockItem");
 const StockRequest = require("../models/StockRequest");
 const ActivityLog = require("../models/ActivityLog");
+const Notification = require("../models/Notification");
+const Tag = require("../models/Tag");
 const { requireAuth, clearSessionCookie } = require("../middleware/auth");
 const { asyncHandler } = require("../lib/asyncHandler");
 
@@ -30,7 +32,7 @@ router.patch(
   requireAuth(["admin"]),
   asyncHandler(async (req, res) => {
     const { name } = req.body;
-    if (!name?.trim()) {
+    if (typeof name !== "string" || !name.trim()) {
       return res.status(400).json({ error: "Company name is required" });
     }
     const trimmed = name.trim();
@@ -68,6 +70,8 @@ router.delete(
     StockItem.deleteMany({ companyId }),
     Warehouse.deleteMany({ companyId }),
     ActivityLog.deleteMany({ companyId }),
+    Notification.deleteMany({ companyId }),
+    Tag.deleteMany({ companyId }),
     User.deleteMany({ companyId }),
   ]);
   await company.deleteOne();

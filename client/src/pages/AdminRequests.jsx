@@ -132,7 +132,7 @@ export default function AdminRequestsPage() {
   return (
     <div className="page-container">
       <div className="admin-page-header">
-        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Pending Requests</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 capitalize">{filter} Requests</h1>
         <p className="text-slate-500 mt-1">Review employee stock change requests</p>
       </div>
 
