@@ -265,21 +265,21 @@ export function EmployeeStockSkeleton({ withControls = true }) {
 export function AdminShellSkeleton() {
   return (
     <Loading label="Loading" className="min-h-screen bg-paper">
-      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0 lg:left-0 bg-white border-r border-line">
-        <div className="p-6 border-b border-line flex items-center gap-3">
+      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0 lg:left-0 bg-ink">
+        <div className="p-6 border-b border-white/10 flex items-center gap-3 opacity-20">
           <Skeleton className="w-10 h-10 rounded-xl" />
           <div className="space-y-2 flex-1">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-3 w-16" />
           </div>
         </div>
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-2 opacity-20">
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-11 w-full rounded-xl" />
           ))}
         </div>
       </aside>
-      <header className="lg:hidden flex items-center gap-2.5 px-4 py-2.5 border-b border-line">
+      <header className="lg:hidden flex items-center gap-2.5 px-4 py-2.5 bg-ink [&>*]:opacity-20">
         <Skeleton className="w-8 h-8" />
         <Skeleton className="h-4 w-40" />
       </header>

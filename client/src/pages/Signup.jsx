@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Alert, PasswordInput } from "../components/ui";
 import { AuthLayout, Field } from "../components/AuthLayout";
 import { post } from "../lib/api";
@@ -17,7 +17,13 @@ function previewSlug(name) {
 const PANEL_POINTS = [
   "A private workspace just for your business",
   "Add warehouses, items and employees in minutes",
-  "Import existing stock from an Excel sheet",
+  "Bring existing stock in from an Excel sheet",
+];
+
+const NEXT_STEPS = [
+  { title: "Add your warehouses and items", body: "Or upload your existing stock from Excel." },
+  { title: "Create logins for your team", body: "On the Team page — share the company code with them." },
+  { title: "Approve requests as they come in", body: "Stock only changes once you approve." },
 ];
 
 export default function SignupPage() {
@@ -71,36 +77,33 @@ export default function SignupPage() {
       <AuthLayout
         title="Your workspace is ready"
         subtitle="Share this company code with your employees — they'll enter it when they sign in."
-        panelTitle={
-          <>
-            You're all set. <span className="text-brand-500">Let's add some stock.</span>
-          </>
-        }
+        panelTitle="You're all set. Next, add some stock."
         panelPoints={PANEL_POINTS}
       >
         <div className="space-y-6">
-          <div className="rounded-2xl border border-line bg-white p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink/50">Company code</p>
+          <div className="rounded-xl border border-brand-200 bg-brand-50 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-800">Company code</p>
             <div className="flex items-center justify-between gap-3 mt-2">
               <p className="font-mono text-xl font-bold text-ink break-all">{companySlug}</p>
               <button type="button" onClick={copyCode} className="btn-secondary !min-h-0 !py-2 text-sm shrink-0">
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
-            <p className="text-xs text-ink/50 mt-3">You can always find it later under Settings.</p>
+            <p className="text-xs text-brand-800 mt-3">You can always find it later under Settings.</p>
           </div>
 
-          <ol className="space-y-3 text-sm text-ink/70">
-            {["Add your warehouses and items", "Create logins for your employees on the Team page", "Approve their requests as they come in"].map(
-              (step, i) => (
-                <li key={step} className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-brand-100 text-brand-800 text-xs font-bold flex items-center justify-center shrink-0">
-                    {i + 1}
-                  </span>
-                  {step}
-                </li>
-              )
-            )}
+          <ol className="space-y-4">
+            {NEXT_STEPS.map((step, i) => (
+              <li key={step.title} className="flex items-start gap-3">
+                <span className="w-6 h-6 rounded-full border border-line text-slate-600 text-xs font-bold font-mono flex items-center justify-center shrink-0">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-ink">{step.title}</p>
+                  <p className="text-sm text-slate-500">{step.body}</p>
+                </div>
+              </li>
+            ))}
           </ol>
 
           <button onClick={() => navigate("/admin")} className="btn-primary w-full !py-3.5 text-base">
@@ -117,18 +120,12 @@ export default function SignupPage() {
     <AuthLayout
       title="Create your workspace"
       subtitle="Set up stock tracking for your business. It takes about a minute."
-      panelTitle={
-        <>
-          Know what's on the shelf, <span className="text-brand-500">at every location.</span>
-        </>
-      }
+      topLink={{ text: "Already have a workspace?", label: "Sign in", to: "/login" }}
+      panelTitle="Know what's on the shelf, at every location."
       panelPoints={PANEL_POINTS}
       footer={
         <>
-          Already have a workspace?{" "}
-          <Link to="/login" className="font-semibold text-brand-700 hover:underline">
-            Sign in
-          </Link>
+          You'll be the admin. Employees don't sign up here — you create their logins from the Team page.
         </>
       }
     >
@@ -141,7 +138,7 @@ export default function SignupPage() {
           hint={
             slug ? (
               <>
-                Your company code will be <span className="font-mono font-semibold text-ink/70">{slug}</span>
+                Your company code will be <span className="font-mono font-semibold text-ink">{slug}</span>
               </>
             ) : (
               "You can rename it later in Settings."

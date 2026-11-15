@@ -38,8 +38,8 @@ function BrandMark({ size = "sm" }) {
   const box = size === "sm" ? "w-8 h-8 rounded-lg" : "w-10 h-10 rounded-xl";
   const icon = size === "sm" ? "w-4 h-4" : "w-5 h-5";
   return (
-    <div className={`${box} bg-ink flex items-center justify-center shrink-0`}>
-      <svg className={`${icon} text-paper`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className={`${box} bg-brand-600 flex items-center justify-center shrink-0`}>
+      <svg className={`${icon} text-white`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
       </svg>
     </div>
@@ -110,17 +110,17 @@ export function AdminNav({ username, companyName }) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 bg-white border-r border-line">
-        <div className="p-6 border-b border-line">
+      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 bg-ink text-white">
+        <div className="p-6 border-b border-white/10">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <BrandMark size="lg" />
               <div className="min-w-0">
-                <h1 className="font-display font-bold text-ink leading-tight break-words">{companyName || "Stock Tracker"}</h1>
-                <p className="text-xs text-slate-500">Admin Portal</p>
+                <h1 className="font-display font-bold text-white leading-tight break-words">{companyName || "Stock Tracker"}</h1>
+                <p className="text-xs text-slate-400">Admin Portal</p>
               </div>
             </div>
-            <NotificationBell align="left" />
+            <NotificationBell align="left" tone="dark" />
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -130,8 +130,9 @@ export function AdminNav({ username, companyName }) {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                  active ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-50"
+                aria-current={active ? "page" : undefined}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  active ? "bg-brand-600 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"
                 }`}
               >
                 <NavIcon d={link.icon} className="w-5 h-5" />
@@ -140,28 +141,28 @@ export function AdminNav({ username, companyName }) {
             );
           })}
         </nav>
-        <div className="p-4 border-t border-line space-y-1">
-          <p className="text-sm text-slate-600 px-4 mb-2 truncate">{username}</p>
-          <button onClick={() => setShowPassword(true)} className="btn-ghost w-full justify-start">
+        <div className="p-4 border-t border-white/10 space-y-1">
+          <p className="text-sm text-slate-400 px-4 mb-2 truncate">{username}</p>
+          <button onClick={() => setShowPassword(true)} className="btn w-full justify-start text-slate-300 hover:bg-white/5 hover:text-white">
             Change password
           </button>
-          <button onClick={logout} className="btn-ghost w-full justify-start text-red-600">
+          <button onClick={logout} className="btn w-full justify-start text-red-300 hover:bg-white/5 hover:text-red-200">
             Sign out
           </button>
         </div>
       </aside>
 
       {/* Mobile header */}
-      <header className="lg:hidden sticky top-0 z-30 bg-paper/85 backdrop-blur-lg border-b border-line pt-safe">
+      <header className="lg:hidden sticky top-0 z-30 bg-ink text-white pt-safe">
         <div className="flex items-center justify-between gap-3 px-4 py-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <BrandMark />
             <div className="min-w-0">
-              <p className="font-display font-bold text-ink leading-tight truncate">{companyName || "Stock Tracker"}</p>
-              <p className="text-[11px] text-slate-500 leading-tight">Admin</p>
+              <p className="font-display font-bold text-white leading-tight truncate">{companyName || "Stock Tracker"}</p>
+              <p className="text-[11px] text-slate-400 leading-tight">Admin</p>
             </div>
           </div>
-          <NotificationBell />
+          <NotificationBell tone="dark" />
         </div>
       </header>
 
@@ -238,27 +239,27 @@ export function EmployeeNav({ username, companyName }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-paper/85 backdrop-blur-lg border-b border-line pt-safe">
+      <header className="sticky top-0 z-30 bg-ink text-white pt-safe">
         <div className="flex items-center justify-between gap-3 px-4 py-2.5 max-w-2xl mx-auto">
           <div className="flex items-center gap-2.5 min-w-0">
             <BrandMark />
             <div className="min-w-0">
-              <p className="font-display font-bold text-ink leading-tight truncate">{companyName || "Stock Tracker"}</p>
-              <p className="text-[11px] text-slate-500 leading-tight truncate">{username}</p>
+              <p className="font-display font-bold text-white leading-tight truncate">{companyName || "Stock Tracker"}</p>
+              <p className="text-[11px] text-slate-400 leading-tight truncate">{username}</p>
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {/* Wider screens have room for plain buttons; phones get an account sheet. */}
-            <button onClick={() => setShowPassword(true)} className="hidden sm:block text-sm text-slate-600 font-medium px-2 py-1.5 whitespace-nowrap">
+            <button onClick={() => setShowPassword(true)} className="hidden sm:block text-sm text-slate-300 hover:text-white font-medium px-2 py-1.5 whitespace-nowrap">
               Password
             </button>
-            <button onClick={logout} className="hidden sm:block text-sm text-red-600 font-medium px-2 py-1.5 whitespace-nowrap">
+            <button onClick={logout} className="hidden sm:block text-sm text-red-300 hover:text-red-200 font-medium px-2 py-1.5 whitespace-nowrap">
               Sign out
             </button>
-            <NotificationBell />
+            <NotificationBell tone="dark" />
             <button
               onClick={() => setShowAccount(true)}
-              className="sm:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+              className="sm:hidden p-2 rounded-lg hover:bg-white/10 text-slate-300"
               aria-label="Account"
             >
               <NavIcon d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" className="w-5 h-5" />

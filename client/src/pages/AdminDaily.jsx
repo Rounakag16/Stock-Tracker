@@ -9,18 +9,19 @@ import {
   shiftDateKey,
   formatDateKey,
   LOG_ACTION_OPTIONS,
+  ACTION_TONES,
 } from "../components/ui";
 import { get, download } from "../lib/api";
 
 // Movement columns, in display order. "removed" (stock lost when an item or
 // warehouse was deleted) only shows up when that day actually had some.
 const MOVEMENT_COLUMNS = [
-  { key: "added", label: "Added", sign: "+", color: "text-emerald-700" },
-  { key: "sold", label: "Sold", sign: "−", color: "text-orange-700" },
-  { key: "movedIn", label: "Moved In", sign: "+", color: "text-indigo-700" },
-  { key: "movedOut", label: "Moved Out", sign: "−", color: "text-purple-700" },
-  { key: "adjusted", label: "Adjusted", sign: "±", color: "text-amber-700" },
-  { key: "removed", label: "Removed", sign: "−", color: "text-red-700" },
+  { key: "added", label: "Added", sign: "+", color: ACTION_TONES.added.text },
+  { key: "sold", label: "Sold", sign: "−", color: ACTION_TONES.sale.text },
+  { key: "movedIn", label: "Moved In", sign: "+", color: ACTION_TONES.moved.text },
+  { key: "movedOut", label: "Moved Out", sign: "−", color: ACTION_TONES.moved.text },
+  { key: "adjusted", label: "Adjusted", sign: "±", color: ACTION_TONES.adjusted.text },
+  { key: "removed", label: "Removed", sign: "−", color: ACTION_TONES.danger.text },
 ];
 
 function Movement({ value, sign, color }) {
@@ -174,18 +175,18 @@ export default function AdminDailyPage() {
         <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
             <StatCard label="Opening Stock" value={totals.opening} sub="start of day" />
-            <StatCard label="Added" value={`+${totals.added}`} color="text-emerald-700" />
-            <StatCard label="Sold" value={`−${totals.sold}`} color="text-orange-700" />
+            <StatCard label="Added" value={`+${totals.added}`} color={ACTION_TONES.added.text} />
+            <StatCard label="Sold" value={`−${totals.sold}`} color={ACTION_TONES.sale.text} />
             <StatCard
               label="Moved"
               value={`${totals.movedIn}/${totals.movedOut}`}
-              color="text-purple-700"
+              color={ACTION_TONES.moved.text}
               sub="in / out"
             />
             <StatCard
               label="Adjusted"
               value={`${totals.adjusted > 0 ? "+" : totals.adjusted < 0 ? "−" : ""}${Math.abs(totals.adjusted)}`}
-              color="text-amber-700"
+              color={ACTION_TONES.adjusted.text}
               sub={totals.removed ? `${totals.removed} removed` : "count corrections"}
             />
             <StatCard label="Closing Stock" value={totals.closing} color="text-brand-700" sub="end of day" />

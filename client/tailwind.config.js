@@ -1,11 +1,12 @@
 import colors from "tailwindcss/colors";
 
-// "Warm builder" palette:
-//   charcoal #1C1917 (ink) · orange #F97316 (brand-500) · cream #FFF7ED (paper) · teal #14B8A6 (accent-500)
+// "Ledger Blue" palette:
+//   ink #0F172A · paper #F8FAFC · line #E2E8F0 · brand = blue (600 #2563EB) · accent = amber
 //
-// Two remaps keep every existing page on-palette without touching each
-// class name: the cool `slate` greys become warm `stone` greys, and the
-// green `emerald` used for "success / added" states becomes teal.
+// Blue is only for interaction and emphasis (buttons, links, active nav,
+// focus). Stock actions each own one colour — see ACTION_TONES in
+// src/components/ui.jsx: green added, orange sale, violet moved,
+// amber adjusted/pending, red danger.
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -13,24 +14,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: "#FFF7ED",
-          100: "#FFEDD5",
-          200: "#FED7AA",
-          300: "#FDBA74",
-          400: "#FB923C",
-          500: "#F97316",
-          600: "#EA580C",
-          700: "#C2410C",
-          800: "#9A3412",
-          900: "#7C2D12",
-        },
-        accent: colors.teal,
-        slate: colors.stone,
-        emerald: colors.teal,
-        ink: "#1C1917",
-        paper: "#FFF7ED",
-        line: "#F0E2D0",
+        brand: colors.blue,
+        accent: colors.amber,
+        ink: "#0F172A",
+        paper: "#F8FAFC",
+        line: "#E2E8F0",
       },
       fontFamily: {
         display: ['"Plus Jakarta Sans"', "ui-sans-serif", "system-ui", "sans-serif"],

@@ -1,12 +1,22 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Alert, PasswordInput } from "../components/ui";
 import { AuthLayout, Field } from "../components/AuthLayout";
 import { post } from "../lib/api";
 
+// The company code is the field people forget, so remember it on this device.
+const CODE_KEY = "st:lastCompanyCode";
+function readSavedCode() {
+  try {
+    return localStorage.getItem(CODE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [companySlug, setCompanySlug] = useState("");
+  const [companySlug, setCompanySlug] = useState(readSavedCode);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -25,6 +35,11 @@ export default function LoginPage() {
         return;
       }
 
+      try {
+        localStorage.setItem(CODE_KEY, companySlug.trim().toLowerCase());
+      } catch {
+        // Storage blocked — nothing to remember.
+      }
       navigate(data.user.role === "admin" ? "/admin" : "/employee");
     } catch {
       setError("Connection error. Please try again.");
@@ -35,38 +50,33 @@ export default function LoginPage() {
 
   return (
     <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to your company's workspace."
-      panelTitle={
-        <>
-          Your stock, <span className="text-brand-500">always in sync.</span>
-        </>
-      }
+      title="Sign in"
+      subtitle="Admins and employees both sign in here with your company code."
+      topLink={{ text: "New to Stock Tracker?", label: "Create a workspace", to: "/signup" }}
+      panelTitle="Every sale, receipt and transfer — approved and on record."
       panelPoints={[
-        "Approve your team's sales, receipts and transfers",
-        "See opening and closing stock for any day",
-        "Get alerted before an item runs out",
+        "Approve your team's entries before stock changes",
+        "Opening and closing stock for any day, per warehouse",
+        "Alerts before an item runs out",
       ]}
       footer={
         <>
-          New to Stock Tracker?{" "}
-          <Link to="/signup" className="font-semibold text-brand-700 hover:underline">
-            Create a workspace
-          </Link>
+          <span className="font-semibold text-ink">Forgot your password?</span> Ask your admin to reset it from the
+          Team page.
         </>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && <Alert type="error" message={error} onDismiss={() => setError("")} />}
 
-        <Field id="companySlug" label="Company code" hint="Your admin shares this — it's shown on their Settings page.">
+        <Field id="companySlug" label="Company code" hint="Shown on your admin's Settings page, e.g. sharma-hardware.">
           <input
             id="companySlug"
             type="text"
             className="input font-mono"
             value={companySlug}
             onChange={(e) => setCompanySlug(e.target.value)}
-            placeholder="e.g. sharma-hardware"
+            placeholder="your-company"
             autoComplete="organization"
             autoCapitalize="none"
             spellCheck={false}
@@ -106,11 +116,7 @@ export default function LoginPage() {
 
         {/* Password recovery exists in the codebase (ForgotPassword.jsx,
             ResetPassword.jsx, server/src/routes/auth.js) but isn't wired up
-            to a real email service yet, so the link stays hidden until it is.
-            Until then, an admin can reset an employee's password from Team. */}
-        <p className="text-center text-xs text-ink/50">
-          Forgot your password? Ask your admin to reset it from the Team page.
-        </p>
+            to a real email service yet, so the footer points to the admin. */}
       </form>
     </AuthLayout>
   );

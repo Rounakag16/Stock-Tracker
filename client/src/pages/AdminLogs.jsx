@@ -145,7 +145,7 @@ export default function AdminLogsPage() {
                   onClick={() => toggleAction(opt.value)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
                     selectedActions.includes(opt.value)
-                      ? "bg-ink text-paper border-ink"
+                      ? "bg-brand-600 text-white border-brand-600"
                       : "bg-white text-slate-600 border-line hover:bg-slate-50"
                   }`}
                 >
@@ -188,7 +188,7 @@ export default function AdminLogsPage() {
                         {log.quantity_before != null && log.quantity_after != null && " → "}
                         {log.quantity_after != null && `After: ${log.quantity_after}`}
                         {log.quantity_change != null && (
-                          <span className={log.quantity_change > 0 ? " text-emerald-600 font-medium" : " text-red-600 font-medium"}>
+                          <span className={log.quantity_change > 0 ? " text-emerald-700 font-medium" : " text-red-600 font-medium"}>
                             {" "}({log.quantity_change > 0 ? "+" : ""}{log.quantity_change})
                           </span>
                         )}

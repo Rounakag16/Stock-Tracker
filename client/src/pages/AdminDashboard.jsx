@@ -16,7 +16,7 @@ function ActivityRow({ log }) {
           {log.item_name}
           {log.warehouse_name && ` · ${log.warehouse_name}`}
           {log.quantity_change != null && (
-            <span className={`font-mono ${log.quantity_change > 0 ? "text-emerald-600" : "text-red-600"}`}>
+            <span className={`font-mono ${log.quantity_change > 0 ? "text-emerald-700" : "text-red-600"}`}>
               {" "}({log.quantity_change > 0 ? "+" : ""}{log.quantity_change})
             </span>
           )}
@@ -70,13 +70,13 @@ export default function AdminDashboard() {
         </div>
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Low Stock</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-600 mt-1 tabular-nums font-mono">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-700 mt-1 tabular-nums font-mono">
             {stats?.lowStock?.length ?? 0}
           </p>
         </div>
         <Link to="/admin/requests" className="stat-card hover:border-brand-300 transition-colors block">
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Pending Requests</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-700 mt-1 tabular-nums font-mono">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-700 mt-1 tabular-nums font-mono">
             {stats?.pendingRequests ?? 0}
           </p>
         </Link>
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="py-3 pr-4 tabular-nums font-mono">
                         {log.quantity_change != null ? (
-                          <span className={log.quantity_change > 0 ? "text-emerald-600 font-medium" : "text-red-600 font-medium"}>
+                          <span className={log.quantity_change > 0 ? "text-emerald-700 font-medium" : "text-red-600 font-medium"}>
                             {log.quantity_change > 0 ? "+" : ""}{log.quantity_change}
                           </span>
                         ) : (

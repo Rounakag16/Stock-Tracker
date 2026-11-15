@@ -1,16 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { RequestsSkeleton } from "../components/Skeleton";
-import { Modal, Alert, EmptyState, actionWord, DateField, todayKey, formatDateKey } from "../components/ui";
+import { Modal, Alert, EmptyState, actionWord, ACTION_TONES, REQUEST_TONE, DateField, todayKey, formatDateKey } from "../components/ui";
 import { get, post, patch } from "../lib/api";
 
 function RequestActionBadge({ action }) {
-  const styles = {
-    add: "bg-emerald-100 text-emerald-700",
-    deduct: "bg-orange-100 text-orange-700",
-    move: "bg-purple-100 text-purple-700",
-  };
+  const tone = ACTION_TONES[REQUEST_TONE[action]] || ACTION_TONES.neutral;
   return (
-    <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-semibold ${styles[action] || "bg-slate-100 text-slate-700"}`}>
+    <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-semibold ${tone.badge}`}>
       {actionWord(action)}
     </span>
   );
@@ -146,7 +142,7 @@ export default function AdminRequestsPage() {
             key={s}
             onClick={() => setFilter(s)}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap capitalize ${
-              filter === s ? "bg-ink text-paper" : "bg-white border border-line text-slate-600 hover:bg-slate-50"
+              filter === s ? "bg-brand-600 text-white border border-brand-600" : "bg-white border border-line text-slate-600 hover:bg-slate-50"
             }`}
           >
             {s}

@@ -777,7 +777,7 @@ export default function AdminStockPage() {
               <button
                 type="button"
                 onClick={() => setAdjustType("deduct")}
-                className={`rounded-lg py-2 text-sm font-semibold transition-colors ${adjustType === "deduct" ? "bg-white shadow-sm text-red-700" : "text-slate-500"}`}
+                className={`rounded-lg py-2 text-sm font-semibold transition-colors ${adjustType === "deduct" ? "bg-white shadow-sm text-orange-700" : "text-slate-500"}`}
               >
                 Record Sale
               </button>

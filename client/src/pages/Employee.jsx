@@ -232,7 +232,7 @@ export default function EmployeePage() {
             >
               <div>
                 <p className="font-semibold text-slate-900">Pending requests</p>
-                <p className="text-sm text-amber-600">{myRequests.length} awaiting approval</p>
+                <p className="text-sm text-amber-700">{myRequests.length} awaiting approval</p>
               </div>
               <svg
                 className={`w-5 h-5 text-slate-400 transition-transform ${showRequests ? "rotate-180" : ""}`}
@@ -352,17 +352,17 @@ export default function EmployeePage() {
                       <QuantityBadge quantity={item.quantity} threshold={item.low_stock_threshold} />
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <button onClick={() => openRequest(item, "add")} className="btn-success text-sm">Add</button>
+                      <button onClick={() => openRequest(item, "add")} className="btn-add text-sm">Add</button>
                       <button
                         onClick={() => openRequest(item, "deduct")}
-                        className="btn-danger text-sm"
+                        className="btn-sale text-sm"
                         disabled={item.quantity === 0}
                       >
                         Sale
                       </button>
                       <button
                         onClick={() => openRequest(item, "move")}
-                        className="btn-secondary text-sm"
+                        className="btn-move text-sm"
                         disabled={item.quantity === 0 || warehouses.length < 2}
                       >
                         Move

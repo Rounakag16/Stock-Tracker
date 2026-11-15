@@ -126,7 +126,7 @@ export function Alert({ type, message, onDismiss }) {
   const styles = {
     error: "bg-red-50 text-red-800 border-red-200",
     success: "bg-emerald-50 text-emerald-800 border-emerald-200",
-    info: "bg-blue-50 text-blue-800 border-blue-200",
+    info: "bg-brand-50 text-brand-800 border-brand-200",
   };
 
   return (
@@ -161,10 +161,10 @@ export function QuantityBadge({ quantity, threshold }) {
   const effectiveThreshold = threshold ?? 10;
   const color =
     quantity === 0
-      ? "bg-red-100 text-red-700"
+      ? ACTION_TONES.danger.badge
       : quantity <= effectiveThreshold
-        ? "bg-amber-100 text-amber-700"
-        : "bg-emerald-100 text-emerald-700";
+        ? ACTION_TONES.adjusted.badge
+        : ACTION_TONES.added.badge;
 
   return (
     <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-mono font-bold ${color}`}>
@@ -173,25 +173,40 @@ export function QuantityBadge({ quantity, threshold }) {
   );
 }
 
+// One colour per kind of stock action, used for badges, numbers and table
+// cells everywhere. `badge` = tinted chip, `text` = number on white (AA).
+// Blue is reserved for interaction, so it never marks a stock action.
+export const ACTION_TONES = {
+  added: { badge: "bg-emerald-100 text-emerald-800", text: "text-emerald-700" },
+  sale: { badge: "bg-orange-100 text-orange-800", text: "text-orange-700" },
+  moved: { badge: "bg-violet-100 text-violet-800", text: "text-violet-700" },
+  adjusted: { badge: "bg-amber-100 text-amber-800", text: "text-amber-700" },
+  danger: { badge: "bg-red-100 text-red-800", text: "text-red-700" },
+  neutral: { badge: "bg-slate-100 text-slate-700", text: "text-slate-700" },
+};
+
+// Request actions (add / deduct / move) mapped to their tone.
+export const REQUEST_TONE = { add: "added", deduct: "sale", move: "moved" };
+
 const ACTION_LABELS = {
-  create_item: { text: "Created", color: "bg-blue-100 text-blue-700" },
-  delete_item: { text: "Deleted", color: "bg-red-100 text-red-700" },
-  edit_item: { text: "Edited Item", color: "bg-sky-100 text-sky-700" },
-  add_quantity: { text: "Added", color: "bg-emerald-100 text-emerald-700" },
-  deduct_quantity: { text: "Sale", color: "bg-orange-100 text-orange-700" },
-  edit_quantity: { text: "Edited Qty", color: "bg-amber-100 text-amber-700" },
-  transfer_out: { text: "Moved Out", color: "bg-purple-100 text-purple-700" },
-  transfer_in: { text: "Moved In", color: "bg-indigo-100 text-indigo-700" },
-  create_warehouse: { text: "New Warehouse", color: "bg-teal-100 text-teal-700" },
-  delete_warehouse: { text: "Del Warehouse", color: "bg-red-100 text-red-700" },
-  rename_warehouse: { text: "Renamed Warehouse", color: "bg-teal-100 text-teal-700" },
-  create_employee: { text: "New Employee", color: "bg-cyan-100 text-cyan-700" },
-  delete_employee: { text: "Removed Employee", color: "bg-red-100 text-red-700" },
-  change_password: { text: "Password", color: "bg-slate-100 text-slate-700" },
-  request_submitted: { text: "Requested", color: "bg-yellow-100 text-yellow-800" },
-  request_approved: { text: "Approved", color: "bg-emerald-100 text-emerald-700" },
-  request_denied: { text: "Denied", color: "bg-red-100 text-red-700" },
-  request_edited: { text: "Edited", color: "bg-sky-100 text-sky-700" },
+  create_item: { text: "Created", tone: "added" },
+  delete_item: { text: "Deleted", tone: "danger" },
+  edit_item: { text: "Edited Item", tone: "neutral" },
+  add_quantity: { text: "Added", tone: "added" },
+  deduct_quantity: { text: "Sale", tone: "sale" },
+  edit_quantity: { text: "Edited Qty", tone: "adjusted" },
+  transfer_out: { text: "Moved Out", tone: "moved" },
+  transfer_in: { text: "Moved In", tone: "moved" },
+  create_warehouse: { text: "New Warehouse", tone: "added" },
+  delete_warehouse: { text: "Del Warehouse", tone: "danger" },
+  rename_warehouse: { text: "Renamed Warehouse", tone: "neutral" },
+  create_employee: { text: "New Employee", tone: "added" },
+  delete_employee: { text: "Removed Employee", tone: "danger" },
+  change_password: { text: "Password", tone: "neutral" },
+  request_submitted: { text: "Requested", tone: "adjusted" },
+  request_approved: { text: "Approved", tone: "added" },
+  request_denied: { text: "Denied", tone: "danger" },
+  request_edited: { text: "Edited", tone: "adjusted" },
 };
 
 // Ordered {value, label} list for filter UIs (e.g. the Logs page filter
@@ -203,9 +218,9 @@ export const LOG_ACTION_OPTIONS = Object.entries(ACTION_LABELS).map(([value, { t
 }));
 
 export function ActionLabel({ action }) {
-  const label = ACTION_LABELS[action] || { text: action, color: "bg-slate-100 text-slate-700" };
+  const label = ACTION_LABELS[action] || { text: action, tone: "neutral" };
   return (
-    <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-semibold ${label.color}`}>
+    <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-semibold whitespace-nowrap ${ACTION_TONES[label.tone].badge}`}>
       {label.text}
     </span>
   );
@@ -213,9 +228,9 @@ export function ActionLabel({ action }) {
 
 export function StatusBadge({ status }) {
   const styles = {
-    pending: "bg-amber-100 text-amber-800",
-    approved: "bg-emerald-100 text-emerald-700",
-    denied: "bg-red-100 text-red-700",
+    pending: ACTION_TONES.adjusted.badge,
+    approved: ACTION_TONES.added.badge,
+    denied: ACTION_TONES.danger.badge,
   };
   return (
     <span className={`text-xs font-semibold px-2 py-0.5 rounded-md capitalize ${styles[status] || "bg-slate-100"}`}>
