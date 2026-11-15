@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { AdminNav } from "./Nav";
-import { LoadingSpinner } from "./ui";
+import { AdminShellSkeleton } from "./Skeleton";
 import { get } from "../lib/api";
 
 export function AdminLayout() {
@@ -25,7 +25,7 @@ export function AdminLayout() {
     });
   }, []);
 
-  if (status === "loading") return <LoadingSpinner />;
+  if (status === "loading") return <AdminShellSkeleton />;
   if (status === "denied") return <Navigate to="/login" replace />;
   if (status === "wrong-role") return <Navigate to="/employee" replace />;
 

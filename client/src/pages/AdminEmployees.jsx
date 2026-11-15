@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { Modal, Alert, LoadingSpinner, EmptyState, PasswordInput } from "../components/ui";
+import { ListPageSkeleton } from "../components/Skeleton";
+import { Modal, Alert, EmptyState, PasswordInput } from "../components/ui";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { get, post, del } from "../lib/api";
 
@@ -59,7 +60,7 @@ export default function AdminEmployeesPage() {
     setEmployees((prev) => prev.filter((e) => e.id !== emp.id));
   }
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ListPageSkeleton label="Loading team" count={3} actions={2} />;
 
   return (
     <>

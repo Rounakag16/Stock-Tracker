@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
+import { LogsSkeleton } from "../components/Skeleton";
 import { Link } from "react-router-dom";
-import { LoadingSpinner, EmptyState, ActionLabel, Alert, LOG_ACTION_OPTIONS, formatDateKey } from "../components/ui";
+import { EmptyState, ActionLabel, Alert, LOG_ACTION_OPTIONS, formatDateKey } from "../components/ui";
 import { get, download } from "../lib/api";
 
 export default function AdminLogsPage() {
@@ -82,7 +83,7 @@ export default function AdminLogsPage() {
 
   const hasActiveFilters = startDate || endDate || selectedActions.length > 0;
 
-  if (loading && logs.length === 0 && !hasActiveFilters) return <LoadingSpinner />;
+  if (loading && logs.length === 0 && !hasActiveFilters) return <LogsSkeleton />;
 
   return (
     <div className="page-container">

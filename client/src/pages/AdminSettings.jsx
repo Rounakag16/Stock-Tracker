@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { SettingsSkeleton } from "../components/Skeleton";
 import { useNavigate } from "react-router-dom";
-import { Alert, LoadingSpinner } from "../components/ui";
+import { Alert } from "../components/ui";
 import { get, patch, del } from "../lib/api";
 
 export default function AdminSettingsPage() {
@@ -68,7 +69,7 @@ export default function AdminSettingsPage() {
     navigate("/", { replace: true });
   }
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <SettingsSkeleton />;
 
   return (
     <div className="page-container max-w-2xl">

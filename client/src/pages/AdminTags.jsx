@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Modal, Alert, LoadingSpinner, EmptyState } from "../components/ui";
+import { ListPageSkeleton } from "../components/Skeleton";
+import { Modal, Alert, EmptyState } from "../components/ui";
 import { get, post, patch, del } from "../lib/api";
 
 const PALETTE = [
@@ -132,7 +133,7 @@ export default function AdminTagsPage() {
     );
   }
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ListPageSkeleton label="Loading tags" count={4} lines={0} actions={0} />;
 
   return (
     <div className="page-container max-w-2xl">

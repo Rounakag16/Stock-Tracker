@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { DailySkeleton } from "../components/Skeleton";
 import { useSearchParams } from "react-router-dom";
 import {
-  LoadingSpinner,
   EmptyState,
   ActionLabel,
   Alert,
@@ -169,7 +169,7 @@ export default function AdminDailyPage() {
       {error && <div className="mb-4"><Alert type="error" message={error} onDismiss={() => setError("")} /></div>}
 
       {loading && !report ? (
-        <LoadingSpinner />
+        <DailySkeleton />
       ) : report ? (
         <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">

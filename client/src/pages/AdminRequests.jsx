@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { Modal, Alert, LoadingSpinner, EmptyState, actionWord, DateField, todayKey, formatDateKey } from "../components/ui";
+import { RequestsSkeleton } from "../components/Skeleton";
+import { Modal, Alert, EmptyState, actionWord, DateField, todayKey, formatDateKey } from "../components/ui";
 import { get, post, patch } from "../lib/api";
 
 function RequestActionBadge({ action }) {
@@ -154,7 +155,7 @@ export default function AdminRequestsPage() {
       </div>
 
       {loading ? (
-        <LoadingSpinner />
+        <RequestsSkeleton />
       ) : requests.length === 0 ? (
         <EmptyState
           title={`No ${filter} requests`}

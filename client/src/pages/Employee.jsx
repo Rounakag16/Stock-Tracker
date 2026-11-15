@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
+import { EmployeeStockSkeleton } from "../components/Skeleton";
 import { useNavigate } from "react-router-dom";
 import { EmployeeNav } from "../components/Nav";
 import {
   Modal,
   Alert,
-  LoadingSpinner,
   EmptyState,
   QuantityBadge,
   StatusBadge,
@@ -202,7 +202,7 @@ export default function EmployeePage() {
     return (
       <>
         <EmployeeNav username="" companyName={companyName} />
-        <LoadingSpinner />
+        <EmployeeStockSkeleton />
       </>
     );
   }
@@ -337,7 +337,7 @@ export default function EmployeePage() {
             </div>
 
             {loading ? (
-              <LoadingSpinner />
+              <EmployeeStockSkeleton withControls={false} />
             ) : filtered.length === 0 ? (
               <EmptyState title="No stock items" description={`No items in ${currentWarehouse?.name || "this warehouse"}`} />
             ) : (

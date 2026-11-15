@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { Modal, Alert, LoadingSpinner, EmptyState } from "../components/ui";
+import { ListPageSkeleton } from "../components/Skeleton";
+import { Modal, Alert, EmptyState } from "../components/ui";
 import { get, post, patch, del } from "../lib/api";
 
 export default function AdminWarehousesPage() {
@@ -84,7 +85,7 @@ export default function AdminWarehousesPage() {
     loadData();
   }
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ListPageSkeleton label="Loading warehouses" count={3} actions={2} />;
 
   return (
     <>

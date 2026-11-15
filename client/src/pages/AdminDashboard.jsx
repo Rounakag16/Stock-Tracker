@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { DashboardSkeleton } from "../components/Skeleton";
 import { Link } from "react-router-dom";
-import { LoadingSpinner, ActionLabel } from "../components/ui";
+import { ActionLabel } from "../components/ui";
 import { get } from "../lib/api";
 
 function ActivityRow({ log }) {
@@ -39,7 +40,7 @@ export default function AdminDashboard() {
     });
   }, []);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="page-container">

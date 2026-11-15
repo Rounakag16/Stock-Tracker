@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { StockSkeleton, HistorySkeleton } from "../components/Skeleton";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   Modal,
   Alert,
-  LoadingSpinner,
   EmptyState,
   QuantityBadge,
   ActionLabel,
@@ -537,7 +537,7 @@ export default function AdminStockPage() {
     loadData();
   }
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <StockSkeleton />;
 
   const moveToName = warehouses.find((wh) => String(wh.id) === String(moveTo))?.name || "—";
   const editDelta = selectedItem ? parseInt(editQty, 10) - selectedItem.quantity : 0;
@@ -968,7 +968,7 @@ export default function AdminStockPage() {
 
       <Modal open={showHistory} onClose={() => setShowHistory(false)} title={selectedItem ? `History — ${selectedItem.name}` : "History"}>
         {historyLoading ? (
-          <LoadingSpinner />
+          <HistorySkeleton />
         ) : history.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-8">No activity recorded for this item yet.</p>
         ) : (
