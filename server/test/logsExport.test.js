@@ -86,6 +86,7 @@ test("export includes a Party column, from partyName or legacy details", async (
       "Party",
       "Warehouse",
       "Quantity Change",
+      "Recorded At",
     ]);
     assert.deepEqual(
       rows.map((r) => r.Party),

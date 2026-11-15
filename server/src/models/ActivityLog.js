@@ -42,9 +42,16 @@ const activityLogSchema = new mongoose.Schema({
   // going forward, and only for actions that involve a party. Older rows
   // keep the party inside `details` — see partyFromDetails() in routes/logs.js.
   partyName: { type: String, default: null },
+  // Business date ("YYYY-MM-DD") the entry applies to — chosen by the user
+  // when recording an add/sale/move, so it can differ from createdAt (the
+  // moment it was actually recorded). Day-wise reports and log filters use
+  // this. Older rows are backfilled from createdAt — see lib/backfill.js.
+  entryDate: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 
 activityLogSchema.index({ companyId: 1, createdAt: -1 });
+activityLogSchema.index({ companyId: 1, entryDate: -1, createdAt: -1 });
+activityLogSchema.index({ companyId: 1, itemId: 1, entryDate: 1 });
 
 module.exports = mongoose.model("ActivityLog", activityLogSchema);

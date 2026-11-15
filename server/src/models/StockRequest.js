@@ -9,6 +9,9 @@ const stockRequestSchema = new mongoose.Schema({
   partyName: { type: String, required: true, trim: true },
   fromWarehouseId: { type: mongoose.Schema.Types.ObjectId, ref: "Warehouse", required: true },
   toWarehouseId: { type: mongoose.Schema.Types.ObjectId, ref: "Warehouse", default: null },
+  // Business date ("YYYY-MM-DD") the employee says this happened on. When
+  // approved, the stock change is posted on this date, not the approval day.
+  entryDate: { type: String, default: null },
   status: { type: String, enum: ["pending", "approved", "denied"], default: "pending" },
   reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   reviewedAt: { type: Date, default: null },

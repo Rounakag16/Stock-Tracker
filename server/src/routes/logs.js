@@ -4,6 +4,7 @@ const { requireAuth } = require("../middleware/auth");
 const { activityActionLabel } = require("../lib/labels");
 const { buildWorkbookBuffer } = require("../lib/excel");
 const { asyncHandler } = require("../lib/asyncHandler");
+const { parseDateKeyParam, toDateKey, APP_TIMEZONE } = require("../lib/dates");
 
 const router = express.Router();
 
@@ -19,35 +20,32 @@ function partyFromDetails(details) {
   return trailing ? trailing[1].trim() : "";
 }
 
-// Parses a "YYYY-MM-DD" query param into a Date, or throws a clear error
-// if it isn't one — e.g. a mistyped year like "2000026" produces a JS
-// Date that's out of range, which would otherwise reach MongoDB as
-// "Invalid Date" and crash the query with an uncaught CastError.
-function parseDateParam(value, label) {
-  const date = new Date(`${value}T00:00:00.000`);
-  if (Number.isNaN(date.getTime())) {
-    const err = new Error(`${label} is not a valid date`);
-    err.status = 400;
-    throw err;
-  }
-  return date;
+const timeFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: APP_TIMEZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+
+function entryDateOf(log) {
+  return log.entryDate || toDateKey(log.createdAt);
 }
 
 // Builds a Mongo filter from the shared query params both endpoints below
-// accept: a company scope (always), an optional date range, and an
-// optional list of action types.
+// accept: a company scope (always), an optional entry-date range (the
+// business date the user picked, not when it was recorded), an optional
+// list of action types, and an optional item.
 function buildFilter(companyId, query) {
   const filter = { companyId };
 
   if (query.startDate || query.endDate) {
-    filter.createdAt = {};
+    filter.entryDate = {};
     if (query.startDate) {
-      filter.createdAt.$gte = parseDateParam(query.startDate, "Start date");
+      filter.entryDate.$gte = parseDateKeyParam(query.startDate, "Start date");
     }
     if (query.endDate) {
-      const end = parseDateParam(query.endDate, "End date");
-      end.setHours(23, 59, 59, 999);
-      filter.createdAt.$lte = end;
+      filter.entryDate.$lte = parseDateKeyParam(query.endDate, "End date");
     }
   }
 
@@ -70,13 +68,13 @@ router.get(
   "/",
   requireAuth(["admin"]),
   asyncHandler(async (req, res) => {
-    const limit = parseInt(req.query.limit, 10) || 100;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
     const offset = parseInt(req.query.offset, 10) || 0;
     const filter = buildFilter(req.session.companyId, req.query);
 
     const [logs, total] = await Promise.all([
       ActivityLog.find(filter)
-        .sort({ createdAt: -1 })
+        .sort({ entryDate: -1, createdAt: -1 })
         .skip(offset)
         .limit(limit)
         .populate("userId", "username")
@@ -93,6 +91,7 @@ router.get(
         quantity_after: l.quantityAfter,
         quantity_change: l.quantityChange,
         details: l.details,
+        entry_date: entryDateOf(l),
         created_at: l.createdAt,
         username: l.userId?.username || "Deleted user",
         warehouse_name: l.warehouseId?.name || null,
@@ -122,24 +121,38 @@ router.get(
     const MAX_ROWS = 20000;
 
     const logs = await ActivityLog.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ entryDate: -1, createdAt: -1 })
       .limit(MAX_ROWS)
       .populate("userId", "username")
       .populate("warehouseId", "name");
 
-    const header = ["Date", "Time", "User", "Action", "Item", "Party", "Warehouse", "Quantity Change"];
+    // Date is the entry (business) date; Time and Recorded At are when it
+    // was actually recorded, in APP_TIMEZONE.
+    const header = [
+      "Date",
+      "Time",
+      "User",
+      "Action",
+      "Item",
+      "Party",
+      "Warehouse",
+      "Quantity Change",
+      "Recorded At",
+    ];
 
     const rows = logs.map((l) => {
-      const iso = l.createdAt.toISOString();
+      const recordedDate = toDateKey(l.createdAt);
+      const recordedTime = timeFormatter.format(l.createdAt);
       return [
-        iso.slice(0, 10),
-        iso.slice(11, 19),
+        entryDateOf(l),
+        recordedTime,
         l.userId?.username || "Deleted user",
         activityActionLabel(l.action),
         l.itemName,
         l.partyName || partyFromDetails(l.details),
         l.warehouseId?.name || "",
         l.quantityChange ?? "",
+        `${recordedDate} ${recordedTime}`,
       ];
     });
 

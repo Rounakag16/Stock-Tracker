@@ -4,6 +4,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { connectDb } = require("./src/lib/db");
+const { backfillEntryDates } = require("./src/lib/backfill");
 
 const authRoutes = require("./src/routes/auth");
 const companyRoutes = require("./src/routes/company");
@@ -16,6 +17,7 @@ const dashboardRoutes = require("./src/routes/dashboard");
 const logRoutes = require("./src/routes/logs");
 const notificationRoutes = require("./src/routes/notifications");
 const tagRoutes = require("./src/routes/tags");
+const reportRoutes = require("./src/routes/reports");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -56,6 +58,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/logs", logRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/tags", tagRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
@@ -91,7 +94,14 @@ process.on("uncaughtException", (err) => {
 });
 
 connectDb()
-  .then(() => {
+  .then(async () => {
+    try {
+      await backfillEntryDates();
+    } catch (err) {
+      // Non-fatal: the app still works, older rows just won't show up in
+      // date filters until the next successful start.
+      console.error("entryDate backfill failed:", err.message);
+    }
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });
