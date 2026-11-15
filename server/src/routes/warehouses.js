@@ -101,26 +101,8 @@ router.delete(
       return res.status(404).json({ error: "Warehouse not found" });
     }
 
-    const items = await StockItem.find({ warehouseId: warehouse._id, companyId: req.session.companyId });
     await StockItem.deleteMany({ warehouseId: warehouse._id, companyId: req.session.companyId });
     await warehouse.deleteOne();
-
-    // One delete_item row per item, so the stock that left with the
-    // warehouse is accounted for in day-wise opening/closing history.
-    for (const item of items) {
-      await logActivity({
-        companyId: req.session.companyId,
-        userId: req.session.userId,
-        warehouseId: warehouse._id,
-        itemId: item._id,
-        itemName: item.name,
-        action: "delete_item",
-        quantityBefore: item.quantity,
-        quantityAfter: 0,
-        quantityChange: -item.quantity,
-        details: `Deleted item "${item.name}" with warehouse "${warehouse.name}"`,
-      });
-    }
 
     await logActivity({
       companyId: req.session.companyId,

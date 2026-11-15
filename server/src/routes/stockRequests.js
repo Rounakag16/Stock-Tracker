@@ -8,7 +8,6 @@ const { applyStockAdjust, applyStockMove, logActivity } = require("../lib/stockO
 const { notifyAdmins, notifyUser } = require("../lib/notify");
 const { actionWord } = require("../lib/labels");
 const { asyncHandler } = require("../lib/asyncHandler");
-const { resolveEntryDate, toDateKey } = require("../lib/dates");
 
 const router = express.Router();
 
@@ -25,7 +24,6 @@ function serialize(reqDoc) {
     party_name: reqDoc.partyName,
     from_warehouse_id: reqDoc.fromWarehouseId?._id || reqDoc.fromWarehouseId,
     to_warehouse_id: reqDoc.toWarehouseId?._id || reqDoc.toWarehouseId || null,
-    entry_date: reqDoc.entryDate || (reqDoc.createdAt ? toDateKey(reqDoc.createdAt) : null),
     status: reqDoc.status,
     review_note: reqDoc.reviewNote,
     created_at: reqDoc.createdAt,
@@ -71,8 +69,7 @@ router.post(
   requireAuth(["employee"]),
   asyncHandler(async (req, res) => {
   try {
-    const { itemId, amount, type, partyName, toWarehouseId, date } = req.body;
-    const entryDate = resolveEntryDate(date);
+    const { itemId, amount, type, partyName, toWarehouseId } = req.body;
 
     if (!itemId || !amount || !type || !partyName?.trim()) {
       return res.status(400).json({ error: "Item, amount, type, and party name are required" });
@@ -115,7 +112,6 @@ router.post(
       partyName: party,
       fromWarehouseId: item.warehouseId,
       toWarehouseId: destId,
-      entryDate,
     });
 
     await logActivity({
@@ -128,7 +124,6 @@ router.post(
       quantityChange: type === "deduct" || type === "move" ? -qty : qty,
       details: `Submitted ${actionWord(type)} request for ${qty} of "${item.name}" — Party: ${party}`,
       partyName: party,
-      entryDate,
     });
 
     await notifyAdmins({
@@ -141,7 +136,6 @@ router.post(
 
     return res.json({ request: { id: request._id, status: "pending" } });
   } catch (err) {
-      if (err.status === 400) return res.status(400).json({ error: err.message });
       console.error(err);
       return res.status(500).json({ error: "Something went wrong" });
     }
@@ -168,9 +162,6 @@ async function resolveEdit(reqDoc, edits) {
   const party = edits.partyName !== undefined ? edits.partyName.trim() : reqDoc.partyName;
   if (!party) throw new Error("Party name is required");
 
-  const entryDate =
-    edits.date !== undefined ? resolveEntryDate(edits.date) : reqDoc.entryDate || resolveEntryDate(null);
-
   const item = await StockItem.findOne({ _id: reqDoc.itemId, companyId: reqDoc.companyId });
   if (!item) throw new Error("Item not found");
 
@@ -190,7 +181,7 @@ async function resolveEdit(reqDoc, edits) {
     destId = rawDest;
   }
 
-  return { type, qty, party, destId, entryDate, itemName: item.name, warehouseId: item.warehouseId };
+  return { type, qty, party, destId, itemName: item.name, warehouseId: item.warehouseId };
 }
 
 async function persistEdit(reqDoc, resolved, editorId, editorLabel) {
@@ -198,7 +189,6 @@ async function persistEdit(reqDoc, resolved, editorId, editorLabel) {
   reqDoc.quantity = resolved.qty;
   reqDoc.partyName = resolved.party;
   reqDoc.toWarehouseId = resolved.destId;
-  reqDoc.entryDate = resolved.entryDate;
   await reqDoc.save();
 
   await logActivity({
@@ -209,7 +199,6 @@ async function persistEdit(reqDoc, resolved, editorId, editorLabel) {
     action: "request_edited",
     details: `${editorLabel} edited ${actionWord(resolved.type)} request for ${resolved.qty} of "${resolved.itemName}" — Party: ${resolved.party}`,
     partyName: resolved.party,
-    entryDate: resolved.entryDate,
   });
 }
 
@@ -290,7 +279,6 @@ router.post(
         action: "request_denied",
         details: `Denied ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})${note ? ` — ${note}` : ""}`,
         partyName: reqDoc.partyName,
-        entryDate: reqDoc.entryDate,
       });
 
       await notifyUser({
@@ -319,7 +307,6 @@ router.post(
         qty: reqDoc.quantity,
         userId: req.session.userId,
         partyName: reqDoc.partyName,
-        entryDate: reqDoc.entryDate,
       });
     } else if (reqDoc.action === "move") {
       if (!reqDoc.toWarehouseId) throw new Error("Missing destination warehouse");
@@ -331,7 +318,6 @@ router.post(
         qty: reqDoc.quantity,
         userId: req.session.userId,
         partyName: reqDoc.partyName,
-        entryDate: reqDoc.entryDate,
       });
     }
 
@@ -352,7 +338,6 @@ router.post(
         reqDoc.action === "deduct" || reqDoc.action === "move" ? -reqDoc.quantity : reqDoc.quantity,
       details: `Approved ${actionWord(reqDoc.action)} request from ${requesterName} for ${reqDoc.quantity} of "${itemName}" (Party: ${reqDoc.partyName})`,
       partyName: reqDoc.partyName,
-      entryDate: reqDoc.entryDate,
     });
 
     await notifyUser({
