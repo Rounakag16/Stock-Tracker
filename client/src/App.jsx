@@ -16,6 +16,7 @@ import AdminEmployeesPage from "./pages/AdminEmployees";
 import AdminLogsPage from "./pages/AdminLogs";
 import AdminSettingsPage from "./pages/AdminSettings";
 import AdminTagsPage from "./pages/AdminTags";
+import AdminDailyPage from "./pages/AdminDaily";
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="warehouses" element={<AdminWarehousesPage />} />
           <Route path="requests" element={<AdminRequestsPage />} />
           <Route path="employees" element={<AdminEmployeesPage />} />
+          <Route path="daily" element={<AdminDailyPage />} />
           <Route path="logs" element={<AdminLogsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="tags" element={<AdminTagsPage />} />

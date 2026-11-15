@@ -1,7 +1,17 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
-import { Modal, Alert, LoadingSpinner, EmptyState, QuantityBadge, ActionLabel } from "../components/ui";
+import {
+  Modal,
+  Alert,
+  LoadingSpinner,
+  EmptyState,
+  QuantityBadge,
+  ActionLabel,
+  DateField,
+  todayKey,
+  formatDateKey,
+} from "../components/ui";
 import { get, post, patch, del } from "../lib/api";
 
 // Summary shown before an admin action actually runs — admin actions apply
@@ -181,6 +191,12 @@ export default function AdminStockPage() {
   const [moveQty, setMoveQty] = useState("");
   const [moveStep, setMoveStep] = useState("form");
 
+  // Entry (business) dates for each kind of stock entry — default to today.
+  const [newDate, setNewDate] = useState(todayKey());
+  const [adjustDate, setAdjustDate] = useState(todayKey());
+  const [moveDate, setMoveDate] = useState(todayKey());
+  const [importDate, setImportDate] = useState(todayKey());
+
   const [editName, setEditName] = useState("");
   const [editParty, setEditParty] = useState("");
   const [editCategory, setEditCategory] = useState("");
@@ -240,6 +256,7 @@ export default function AdminStockPage() {
       partyName: newParty,
       category: newCategory,
       lowStockThreshold: newThreshold === "" ? null : newThreshold,
+      date: newDate,
     });
     setSubmitting(false);
 
@@ -255,6 +272,7 @@ export default function AdminStockPage() {
     setNewQty("");
     setNewCategory("");
     setNewThreshold("");
+    setNewDate(todayKey());
     loadData();
   }
 
@@ -274,6 +292,7 @@ export default function AdminStockPage() {
     setAdjustType(type);
     setAdjustAmount("");
     setAdjustParty(item.party_name || "");
+    setAdjustDate(todayKey());
     setAdjustStep("form");
     setError("");
     setShowAdjust(true);
@@ -295,6 +314,7 @@ export default function AdminStockPage() {
       amount: parseInt(adjustAmount, 10),
       type: adjustType,
       partyName: adjustParty,
+      date: adjustDate,
     });
     setSubmitting(false);
 
@@ -318,6 +338,7 @@ export default function AdminStockPage() {
     setSelectedItem(item);
     setMoveTo("");
     setMoveQty("");
+    setMoveDate(todayKey());
     setMoveStep("form");
     setError("");
     setShowMove(true);
@@ -339,6 +360,7 @@ export default function AdminStockPage() {
       fromWarehouseId: selectedItem.warehouse_id,
       toWarehouseId: moveTo,
       quantity: parseInt(moveQty, 10),
+      date: moveDate,
     });
     setSubmitting(false);
 
@@ -453,6 +475,7 @@ export default function AdminStockPage() {
     setImportFileName("");
     setImportResult(null);
     setImportError("");
+    setImportDate(todayKey());
     setShowImport(true);
   }
 
@@ -489,7 +512,7 @@ export default function AdminStockPage() {
     }
 
     setImporting(true);
-    const { ok, data } = await post("/stock/import", { file: importFile });
+    const { ok, data } = await post("/stock/import", { file: importFile, date: importDate });
     setImporting(false);
 
     if (!ok) {
@@ -714,6 +737,7 @@ export default function AdminStockPage() {
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Initial Quantity</label>
             <input type="number" min="0" className="input" value={newQty} onChange={(e) => setNewQty(e.target.value)} placeholder="0" />
           </div>
+          <DateField label="Stock Date" value={newDate} onChange={setNewDate} hint="The day the initial quantity is counted from." />
           <button type="submit" className="btn-primary w-full" disabled={submitting}>
             {submitting ? "Adding..." : "Add Item"}
           </button>
@@ -750,6 +774,12 @@ export default function AdminStockPage() {
                 Record Sale
               </button>
             </div>
+
+            <DateField
+              label={adjustType === "add" ? "Date Received" : "Sale Date"}
+              value={adjustDate}
+              onChange={setAdjustDate}
+            />
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Party Name</label>
@@ -790,12 +820,13 @@ export default function AdminStockPage() {
               onConfirm={confirmAdjust}
               confirmLabel={adjustType === "add" ? "Confirm & Add" : "Confirm & Record Sale"}
               rows={[
+                { label: "Date", value: formatDateKey(adjustDate) },
                 { label: "Item", value: selectedItem.name },
                 { label: "Warehouse", value: selectedItem.warehouse_name },
                 { label: "Party", value: adjustParty || "—" },
                 { label: "Quantity", value: `${adjustType === "add" ? "+" : "-"}${adjustAmount || 0}` },
                 {
-                  label: "New stock",
+                  label: adjustDate === todayKey() ? "New stock" : "Stock today after this",
                   value:
                     adjustType === "add"
                       ? selectedItem.quantity + (parseInt(adjustAmount, 10) || 0)
@@ -829,6 +860,7 @@ export default function AdminStockPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Quantity</label>
               <input type="number" min="1" max={selectedItem.quantity} className="input" value={moveQty} onChange={(e) => setMoveQty(e.target.value)} required />
             </div>
+            <DateField label="Move Date" value={moveDate} onChange={setMoveDate} />
             <button type="submit" className="btn-primary w-full">
               Review
             </button>
@@ -844,6 +876,7 @@ export default function AdminStockPage() {
               onConfirm={confirmMove}
               confirmLabel="Confirm & Move"
               rows={[
+                { label: "Date", value: formatDateKey(moveDate) },
                 { label: "Item", value: selectedItem.name },
                 { label: "From", value: selectedItem.warehouse_name },
                 { label: "To", value: moveToName },
@@ -896,7 +929,7 @@ export default function AdminStockPage() {
                 required
               />
               <p className="text-xs text-slate-500 mt-1.5">
-                Changing this corrects the count directly — it won't be logged as a sale or purchase.
+                Changing this corrects today's count directly — it won't be logged as a sale or purchase.
               </p>
             </div>
             <button type="submit" className="btn-primary w-full">
@@ -936,10 +969,12 @@ export default function AdminStockPage() {
               <div key={log.id} className="p-3 rounded-xl bg-slate-50 text-sm">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <ActionLabel action={log.action} />
-                  <span className="text-xs text-slate-400 font-mono">{new Date(log.created_at).toLocaleString()}</span>
+                  <span className="text-xs font-semibold text-slate-600">{formatDateKey(log.entry_date)}</span>
                 </div>
                 {log.details && <p className="text-slate-600">{log.details}</p>}
-                <p className="text-xs text-slate-400 mt-1">by {log.username || "—"}</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  by {log.username || "—"} · recorded {new Date(log.created_at).toLocaleString()}
+                </p>
               </div>
             ))}
           </div>
@@ -982,6 +1017,8 @@ export default function AdminStockPage() {
             its current stock rather than replacing it — this is for restocking, not overwriting counts.
             To correct a count instead, use Edit on that item.
           </p>
+
+          <DateField label="Stock Date" value={importDate} onChange={setImportDate} hint="Every row in this upload is recorded on this day." />
 
           <div>
             <input

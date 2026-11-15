@@ -7,6 +7,55 @@ export function actionWord(type) {
   return ACTION_WORDS[type] || type;
 }
 
+// --- Entry dates ---
+// Stock entries carry a business date as "YYYY-MM-DD" (local calendar day).
+export function todayKey() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+export function shiftDateKey(key, days) {
+  const [y, m, d] = key.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  return dt.toISOString().slice(0, 10);
+}
+
+// "2026-11-15" → "15 Nov 2026". Parsed as UTC parts so the browser's
+// timezone can never shift it to the previous/next day.
+export function formatDateKey(key) {
+  if (!key) return "—";
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+// Date picker for an entry date. Can't pick a future day.
+export function DateField({ label = "Date", value, onChange, hint }) {
+  const today = todayKey();
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+      <input
+        type="date"
+        className="input"
+        value={value}
+        max={today}
+        onChange={(e) => onChange(e.target.value)}
+        required
+      />
+      {value && value !== today && (
+        <p className="text-xs text-amber-700 mt-1.5">Backdated — this will be recorded on {formatDateKey(value)}.</p>
+      )}
+      {hint && <p className="text-xs text-slate-500 mt-1.5">{hint}</p>}
+    </div>
+  );
+}
+
 // A password <input> with a show/hide eye toggle. Accepts the same props
 // as a normal input (value, onChange, placeholder, required, etc.) and
 // spreads any extras through.

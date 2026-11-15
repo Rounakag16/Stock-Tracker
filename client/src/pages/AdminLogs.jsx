@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { LoadingSpinner, EmptyState, ActionLabel, Alert, LOG_ACTION_OPTIONS } from "../components/ui";
+import { Link } from "react-router-dom";
+import { LoadingSpinner, EmptyState, ActionLabel, Alert, LOG_ACTION_OPTIONS, formatDateKey } from "../components/ui";
 import { get } from "../lib/api";
 
 export default function AdminLogsPage() {
@@ -106,6 +107,7 @@ export default function AdminLogsPage() {
 
       {showFilters && (
         <div className="card p-4 sm:p-5 mb-6 space-y-4">
+          <p className="text-xs text-slate-500 -mb-1">Dates filter by entry date — the day chosen when the stock was added, sold or moved.</p>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">From date</label>
@@ -191,9 +193,18 @@ export default function AdminLogsPage() {
                       </p>
                     )}
                   </div>
-                  <time className="text-xs text-slate-400 shrink-0 text-right font-mono">
-                    {new Date(log.created_at).toLocaleString()}
-                  </time>
+                  <div className="shrink-0 text-right">
+                    <Link
+                      to={`/admin/daily?date=${log.entry_date}`}
+                      className="text-sm font-semibold text-brand-700 hover:underline"
+                      title="View this day's report"
+                    >
+                      {formatDateKey(log.entry_date)}
+                    </Link>
+                    <time className="block text-xs text-slate-400 font-mono mt-0.5" title="When this entry was recorded">
+                      Recorded {new Date(log.created_at).toLocaleString()}
+                    </time>
+                  </div>
                 </div>
               </div>
             ))}

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Modal, Alert, LoadingSpinner, EmptyState, actionWord } from "../components/ui";
+import { Modal, Alert, LoadingSpinner, EmptyState, actionWord, DateField, todayKey, formatDateKey } from "../components/ui";
 import { get, post, patch } from "../lib/api";
 
 function RequestActionBadge({ action }) {
@@ -31,6 +31,7 @@ export default function AdminRequestsPage() {
   const [editAmount, setEditAmount] = useState("");
   const [editParty, setEditParty] = useState("");
   const [editMoveTo, setEditMoveTo] = useState("");
+  const [editDate, setEditDate] = useState(todayKey());
   const [editError, setEditError] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
 
@@ -74,6 +75,7 @@ export default function AdminRequestsPage() {
     setEditAmount(String(req.quantity));
     setEditParty(req.party_name);
     setEditMoveTo(req.to_warehouse_id ? String(req.to_warehouse_id) : "");
+    setEditDate(req.entry_date || todayKey());
     setEditError("");
   }
 
@@ -82,6 +84,7 @@ export default function AdminRequestsPage() {
       type: editType,
       amount: parseInt(editAmount, 10),
       partyName: editParty,
+      date: editDate,
     };
     if (editType === "move") payload.toWarehouseId = editMoveTo;
     return payload;
@@ -178,6 +181,7 @@ export default function AdminRequestsPage() {
                   <div className="mt-2 space-y-1 text-sm text-slate-600">
                     <p><span className="text-slate-500">Quantity:</span> <strong className="font-mono tabular-nums">{req.quantity}</strong></p>
                     <p><span className="text-slate-500">Party:</span> <strong>{req.party_name}</strong></p>
+                    <p><span className="text-slate-500">Date:</span> <strong>{formatDateKey(req.entry_date)}</strong></p>
                     <p>
                       <span className="text-slate-500">Warehouse:</span> {req.from_warehouse_name}
                       {req.action === "move" && req.to_warehouse_name && <> → {req.to_warehouse_name}</>}
@@ -278,6 +282,8 @@ export default function AdminRequestsPage() {
                 onChange={(e) => setEditAmount(e.target.value)}
               />
             </div>
+
+            <DateField value={editDate} onChange={setEditDate} />
 
             <div className="flex gap-2">
               <button onClick={handleSaveEdit} className="btn-secondary flex-1 text-sm" disabled={editSubmitting}>

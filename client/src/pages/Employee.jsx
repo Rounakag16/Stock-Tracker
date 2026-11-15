@@ -1,7 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { EmployeeNav } from "../components/Nav";
-import { Modal, Alert, LoadingSpinner, EmptyState, QuantityBadge, StatusBadge, actionWord } from "../components/ui";
+import {
+  Modal,
+  Alert,
+  LoadingSpinner,
+  EmptyState,
+  QuantityBadge,
+  StatusBadge,
+  actionWord,
+  DateField,
+  todayKey,
+  formatDateKey,
+} from "../components/ui";
 import { get, post, patch } from "../lib/api";
 
 export default function EmployeePage() {
@@ -21,6 +32,7 @@ export default function EmployeePage() {
   const [amount, setAmount] = useState("");
   const [partyName, setPartyName] = useState("");
   const [moveTo, setMoveTo] = useState("");
+  const [entryDate, setEntryDate] = useState(todayKey());
   const [showModal, setShowModal] = useState(false);
 
   const [error, setError] = useState("");
@@ -32,6 +44,7 @@ export default function EmployeePage() {
   const [editAmount, setEditAmount] = useState("");
   const [editParty, setEditParty] = useState("");
   const [editMoveTo, setEditMoveTo] = useState("");
+  const [editDate, setEditDate] = useState(todayKey());
   const [editError, setEditError] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
 
@@ -101,6 +114,7 @@ export default function EmployeePage() {
     setAmount("");
     setPartyName(item.party_name || "");
     setMoveTo("");
+    setEntryDate(todayKey());
     setError("");
     setShowModal(true);
   }
@@ -116,6 +130,7 @@ export default function EmployeePage() {
       amount: parseInt(amount, 10),
       type: requestType,
       partyName,
+      date: entryDate,
     };
     if (requestType === "move") body.toWarehouseId = moveTo;
 
@@ -138,6 +153,7 @@ export default function EmployeePage() {
     setEditAmount(String(req.quantity));
     setEditParty(req.party_name);
     setEditMoveTo(req.to_warehouse_id ? String(req.to_warehouse_id) : "");
+    setEditDate(req.entry_date || todayKey());
     setEditError("");
   }
 
@@ -151,6 +167,7 @@ export default function EmployeePage() {
       type: editType,
       amount: parseInt(editAmount, 10),
       partyName: editParty,
+      date: editDate,
     };
     if (editType === "move") body.toWarehouseId = editMoveTo;
 
@@ -235,6 +252,7 @@ export default function EmployeePage() {
                     </div>
                     <p className="text-slate-700">{req.item_name} × <span className="font-mono">{req.quantity}</span></p>
                     <p className="text-slate-500">Party: {req.party_name}</p>
+                    <p className="text-slate-500">Date: {formatDateKey(req.entry_date)}</p>
                   </div>
                 ))}
               </div>
@@ -341,6 +359,12 @@ export default function EmployeePage() {
               </div>
             )}
 
+            <DateField
+              label={{ add: "Date Received", deduct: "Sale Date", move: "Move Date" }[requestType]}
+              value={entryDate}
+              onChange={setEntryDate}
+            />
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Quantity</label>
               <input
@@ -411,6 +435,8 @@ export default function EmployeePage() {
                 required
               />
             </div>
+
+            <DateField value={editDate} onChange={setEditDate} />
 
             <button type="submit" className="btn-primary w-full" disabled={editSubmitting}>
               {editSubmitting ? "Saving..." : "Save Changes"}
