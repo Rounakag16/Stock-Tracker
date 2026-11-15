@@ -9,6 +9,9 @@
 
   body {
     @apply bg-paper text-ink antialiased font-sans;
+    /* Stops iOS from inflating text when the phone is rotated. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   h1, h2, h3 {
@@ -61,12 +64,37 @@
     @apply mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8 xl:max-w-7xl;
   }
 
+  /* Bottom padding = mobile nav height (56px) + breathing room + the
+     iPhone home-indicator inset, so the last card is never hidden. */
   .admin-content {
-    @apply min-h-screen pb-20 lg:pb-0 lg:ml-60;
+    @apply min-h-screen lg:pb-0 lg:ml-60;
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 1024px) {
+    .admin-content {
+      padding-bottom: 0;
+    }
   }
 
   .admin-page-header {
     @apply mb-6 lg:mb-8 lg:pb-6 lg:border-b lg:border-line;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pb-safe-5 {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  }
+
+  .pb-safe-3 {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
   }
 
   .stat-card {

@@ -157,7 +157,7 @@ function ManifestCard() {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-paper text-ink overflow-x-clip">
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur">
         <div className="page-container flex items-center justify-between py-3.5">

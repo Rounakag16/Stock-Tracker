@@ -197,7 +197,7 @@ export default function AdminRequestsPage() {
                 </div>
 
                 {filter === "pending" && (
-                  <div className="flex gap-2 shrink-0">
+                  <div className="grid grid-cols-3 lg:flex gap-2 shrink-0">
                     <button onClick={() => openEdit(req)} className="btn-secondary text-sm" disabled={submitting === req.id}>
                       Edit
                     </button>

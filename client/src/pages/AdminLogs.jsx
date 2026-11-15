@@ -91,7 +91,7 @@ export default function AdminLogsPage() {
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Activity Logs</h1>
           <p className="text-slate-500 mt-1">{total} matching entries</p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 sm:flex gap-2">
           <button onClick={() => setShowFilters(!showFilters)} className="btn-secondary text-sm">
             Filters{hasActiveFilters ? ` (${selectedActions.length + (startDate ? 1 : 0) + (endDate ? 1 : 0)})` : ""}
           </button>
@@ -172,7 +172,7 @@ export default function AdminLogsPage() {
           <div className="space-y-3">
             {logs.map((log) => (
               <div key={log.id} className="card p-4">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="font-semibold text-slate-900">{log.username}</span>
@@ -180,7 +180,7 @@ export default function AdminLogsPage() {
                     </div>
                     <p className="text-sm font-medium text-slate-800">{log.item_name}</p>
                     {log.warehouse_name && <p className="text-xs text-slate-500 mt-0.5">{log.warehouse_name}</p>}
-                    {log.details && <p className="text-sm text-slate-600 mt-1">{log.details}</p>}
+                    {log.details && <p className="text-sm text-slate-600 mt-1 break-words">{log.details}</p>}
                     {(log.quantity_before != null || log.quantity_after != null) && (
                       <p className="text-xs text-slate-500 mt-1 font-mono">
                         {log.quantity_before != null && `Before: ${log.quantity_before}`}
@@ -194,7 +194,7 @@ export default function AdminLogsPage() {
                       </p>
                     )}
                   </div>
-                  <div className="shrink-0 text-right">
+                  <div className="shrink-0 flex items-baseline justify-between gap-3 sm:block sm:text-right">
                     <Link
                       to={`/admin/daily?date=${log.entry_date}`}
                       className="text-sm font-semibold text-brand-700 hover:underline"
@@ -202,8 +202,9 @@ export default function AdminLogsPage() {
                     >
                       {formatDateKey(log.entry_date)}
                     </Link>
-                    <time className="block text-xs text-slate-400 font-mono mt-0.5" title="When this entry was recorded">
-                      Recorded {new Date(log.created_at).toLocaleString()}
+                    <time className="text-xs text-slate-400 font-mono sm:block sm:mt-0.5" title="When this entry was recorded">
+                      <span className="hidden sm:inline">Recorded </span>
+                      {new Date(log.created_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
                     </time>
                   </div>
                 </div>

@@ -131,31 +131,33 @@ export default function AdminDailyPage() {
             {isToday && " (today)"}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => goTo(shiftDateKey(date, -1))} className="btn-secondary px-3" aria-label="Previous day">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button onClick={() => goTo(shiftDateKey(date, -1))} className="btn-secondary px-3 shrink-0" aria-label="Previous day">
             ◀
           </button>
           <input
             type="date"
-            className="input w-auto"
+            className="input flex-1 min-w-0 sm:w-auto sm:flex-none"
             value={date}
             max={today}
             onChange={(e) => goTo(e.target.value)}
           />
           <button
             onClick={() => goTo(shiftDateKey(date, 1))}
-            className="btn-secondary px-3"
+            className="btn-secondary px-3 shrink-0"
             disabled={date >= today}
             aria-label="Next day"
           >
             ▶
           </button>
           {!isToday && (
-            <button onClick={() => goTo(today)} className="btn-ghost">
+            <button onClick={() => goTo(today)} className="btn-ghost shrink-0">
               Today
             </button>
           )}
-          <select className="select w-auto" value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
+          </div>
+          <select className="select w-full sm:w-auto" value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
             <option value="">All warehouses</option>
             {warehouses.map((wh) => (
               <option key={wh.id} value={wh.id}>{wh.name}</option>

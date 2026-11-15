@@ -85,7 +85,7 @@ export default function AdminEmployeesPage() {
         ) : (
           <div className="space-y-3">
             {employees.map((emp) => (
-              <div key={emp.id} className="card p-4 flex items-center justify-between gap-3">
+              <div key={emp.id} className="card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center shrink-0">
                     <span className="text-brand-700 font-bold text-sm">{emp.username.charAt(0).toUpperCase()}</span>
@@ -95,7 +95,7 @@ export default function AdminEmployeesPage() {
                     <p className="text-xs text-slate-500">Joined {new Date(emp.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="grid grid-cols-2 sm:flex items-center gap-2 shrink-0">
                   <button onClick={() => setResetTarget(emp)} className="btn-secondary text-sm">
                     Reset password
                   </button>

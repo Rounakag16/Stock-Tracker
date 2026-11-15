@@ -72,7 +72,9 @@ function ActionsMenu({ actions }) {
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       const menuHeight = actions.length * MENU_ITEM_HEIGHT + 8;
-      const openUpward = rect.bottom + menuHeight + 8 > window.innerHeight;
+      // On phones the fixed bottom nav covers the last ~5rem of the screen.
+      const bottomInset = window.innerWidth < 1024 ? 88 : 8;
+      const openUpward = rect.bottom + menuHeight + bottomInset > window.innerHeight;
       setPosition({
         top: openUpward ? rect.top - menuHeight - 6 : rect.bottom + 6,
         // Right-aligned to the button, but never off the left edge.
@@ -112,7 +114,7 @@ function ActionsMenu({ actions }) {
         ref={buttonRef}
         type="button"
         onClick={toggle}
-        className="w-9 h-9 rounded-lg border border-line bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 shrink-0"
+        className="w-11 h-11 lg:w-9 lg:h-9 rounded-lg border border-line bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 shrink-0"
         aria-label="More actions"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -548,14 +550,14 @@ export default function AdminStockPage() {
             <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Stock Management</h1>
             <p className="text-slate-500 mt-1">{filtered.length} items</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
             <button onClick={openImport} className="btn-secondary">
               Upload Excel
             </button>
             <button onClick={handleExport} className="btn-secondary">
               Download Excel
             </button>
-            <button onClick={() => { setShowAdd(true); setError(""); }} className="btn-primary">
+            <button onClick={() => { setShowAdd(true); setError(""); }} className="btn-primary col-span-2 order-first sm:order-none">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
@@ -567,22 +569,22 @@ export default function AdminStockPage() {
         {success && <div className="mb-4"><Alert type="success" message={success} onDismiss={() => setSuccess("")} /></div>}
         {pageError && <div className="mb-4"><Alert type="error" message={pageError} onDismiss={() => setPageError("")} /></div>}
 
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className={`grid gap-3 mb-4 sm:flex ${tags.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
           <input
             type="search"
-            className="input flex-1"
+            className={`input sm:flex-1 ${tags.length > 0 ? "col-span-2" : ""}`}
             placeholder="Search items..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select className="select sm:w-48" value={filterWarehouse} onChange={(e) => setFilterWarehouse(e.target.value)}>
+          <select className="select min-w-0 sm:w-48" value={filterWarehouse} onChange={(e) => setFilterWarehouse(e.target.value)}>
             <option value="">All warehouses</option>
             {warehouses.map((wh) => (
               <option key={wh.id} value={wh.id}>{wh.name}</option>
             ))}
           </select>
           {tags.length > 0 && (
-            <select className="select sm:w-48" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+            <select className="select min-w-0 sm:w-48" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
               <option value="">All tags</option>
               {tags.map((t) => (
                 <option key={t.id} value={t.name}>{t.name}</option>
@@ -601,7 +603,7 @@ export default function AdminStockPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-slate-900 truncate">{item.name}</h3>
+                        <h3 className="font-semibold text-slate-900 break-words">{item.name}</h3>
                         {item.category && (
                           <span
                             className="text-[11px] font-semibold px-1.5 py-0.5 rounded"
@@ -617,12 +619,12 @@ export default function AdminStockPage() {
                     <QuantityBadge quantity={item.quantity} threshold={item.low_stock_threshold} />
                   </div>
                   <div className="flex items-center gap-2 mt-3">
-                    <button onClick={() => openAdjust(item, "add")} className="btn-secondary flex-1 text-xs">
+                    <button onClick={() => openAdjust(item, "add")} className="btn-secondary flex-1 text-sm">
                       Add
                     </button>
                     <button
                       onClick={() => openAdjust(item, "deduct")}
-                      className="btn-secondary flex-1 text-xs"
+                      className="btn-secondary flex-1 text-sm"
                       disabled={item.quantity === 0}
                     >
                       Sale

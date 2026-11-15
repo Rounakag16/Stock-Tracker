@@ -100,7 +100,7 @@ export default function AdminSettingsPage() {
           Employees enter this alongside their username to sign in. Share it, don't publish it.
         </p>
         <div className="flex items-center gap-2">
-          <code className="flex-1 font-mono text-lg font-bold px-4 py-3 rounded-xl bg-slate-50 border border-line">
+          <code className="flex-1 min-w-0 break-all font-mono text-base sm:text-lg font-bold px-4 py-3 rounded-xl bg-slate-50 border border-line">
             {company.slug}
           </code>
           <button onClick={copyCode} className="btn-secondary shrink-0">

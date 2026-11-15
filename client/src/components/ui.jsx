@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Internal action/type values stay "add" / "deduct" / "move" throughout the
 // app (matches the database), but "deduct" reads as "Sale" to the user.
@@ -88,14 +88,28 @@ export function PasswordInput({ className = "input", ...props }) {
 }
 
 export function Modal({ open, onClose, title, children }) {
+  // Lock the page behind the sheet so scrolling a long form on a phone
+  // doesn't scroll the page underneath; Escape closes on keyboards.
+  useEffect(() => {
+    if (!open) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => e.key === "Escape" && onClose?.();
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-md card rounded-b-none sm:rounded-2xl p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+      <div className="relative w-full sm:max-w-md card rounded-b-none sm:rounded-2xl p-5 sm:p-6 pb-safe-5 sm:pb-6 max-h-[90dvh] overflow-y-auto overscroll-contain">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h2 className="text-lg font-bold text-slate-900 min-w-0 break-words">{title}</h2>
           <button onClick={onClose} className="p-2 -mr-2 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Close">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
