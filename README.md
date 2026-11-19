@@ -31,7 +31,7 @@ In production, the Express server also serves the built React app as static file
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 22+
 - MongoDB — either:
   - **Local**: install MongoDB Community Server ([docs](https://www.mongodb.com/docs/manual/administration/install-community/)) and run `mongod`
   - **Cloud (easiest)**: a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) cluster — no local install needed
@@ -87,6 +87,20 @@ Then visit whatever port your server is listening on (default `4000`, or whateve
 | `PORT`          | No               | Defaults to `4000`                                                                                                                                              |
 | `CLIENT_ORIGIN` | No               | Only used in development, for CORS                                                                                                                              |
 | `APP_TIMEZONE`  | No               | IANA timezone that decides which calendar day "today" is for stock entries (default `Asia/Kolkata`).                                                             |
+| `APP_URL`       | Yes (for email)  | Public URL used in email links, e.g. `https://warelyy.onrender.com`. Never taken from the request, so links can't be spoofed.                                  |
+| `EMAIL_PROVIDER`| No               | `brevo` or `resend`. Empty = no password-reset / confirmation emails (dev prints them to the console).                                                         |
+| `EMAIL_API_KEY` | With provider    | The provider's API key.                                                                                                                                         |
+| `EMAIL_FROM`    | With provider    | Sender address verified with the provider.                                                                                                                      |
+| `GOOGLE_CLIENT_ID` | No            | OAuth Web client ID. Shows "Continue with Google" when set.                                                                                                     |
+
+Client-side (build-time) variables — set them on the host too; see `client/.env.example`: `VITE_SUPPORT_EMAIL`, `VITE_LEGAL_NAME`, `VITE_LEGAL_CITY`, `VITE_SITE_URL`. They fill in the Terms, Privacy Policy and footers.
+
+## Accounts and sign-in
+
+- **Admins** sign up with their email and a password, or with Google. They sign in with email (or Google), can reset a forgotten password by email, and confirm their email address with a link.
+- **Employees** don't need an email. The admin creates them on the Team page with a temporary password; they sign in with the company code + username, and must choose their own password (and accept the Terms) on first sign-in. If they forget it, the admin resets it.
+- Admins created before email sign-in still sign in with the company code, and are prompted to add an email in Settings.
+- Passwords: at least 8 characters, checked against common and breached passwords (Have I Been Pwned, k-anonymity — only a 5-character hash prefix is sent). Changing or resetting a password signs out every other device; Settings also has "Sign out everywhere".
 
 ## Deploying
 

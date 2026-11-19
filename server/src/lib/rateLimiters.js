@@ -22,4 +22,14 @@ const registerLimiter = rateLimit({
   message: { error: "Too many attempts. Please try again later." },
 });
 
-module.exports = { loginLimiter, registerLimiter };
+// Anything that sends an email (reset links, verification links) — tight,
+// so the app can't be used to flood someone's inbox.
+const emailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many emails requested. Please try again in an hour." },
+});
+
+module.exports = { loginLimiter, registerLimiter, emailLimiter };

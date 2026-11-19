@@ -3,6 +3,7 @@ const path = require("path");
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const helmet = require("helmet");
 const { connectDb } = require("./src/lib/db");
 const { backfillEntryDates } = require("./src/lib/backfill");
 
@@ -31,6 +32,32 @@ const PORT = process.env.PORT || 4000;
 // which matches Render's setup; a deployment behind more than one proxy
 // would need a higher number here instead.
 app.set("trust proxy", 1);
+app.disable("x-powered-by");
+
+// Security headers. The Content Security Policy only allows scripts, styles
+// and frames from this site plus the two outside services the app really
+// uses: Google Fonts and Google Sign-In.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "script-src": ["'self'", "https://accounts.google.com/gsi/client"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://accounts.google.com/gsi/style"],
+        "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
+        "img-src": ["'self'", "data:", "blob:", "https://*.googleusercontent.com"],
+        "frame-src": ["https://accounts.google.com/gsi/"],
+        "connect-src": ["'self'", "https://accounts.google.com/gsi/"],
+        "form-action": ["'self'"],
+        "frame-ancestors": ["'none'"],
+        ...(process.env.NODE_ENV === "production" ? {} : { "upgrade-insecure-requests": null }),
+      },
+    },
+    // Google Sign-In opens a popup that has to message this page back.
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  })
+);
 
 // Stock uploads arrive as a base64-encoded .xlsx inside the JSON body, so
 // the default 100kb limit would reject any real-world spreadsheet.
@@ -48,6 +75,30 @@ if (process.env.NODE_ENV !== "production") {
     })
   );
 }
+
+// Defence in depth against cross-site request forgery: the session cookie
+// is already SameSite=Lax, and on top of that any state-changing API call
+// that comes from a different website is refused outright.
+const allowedOrigins = new Set(
+  [process.env.APP_URL, process.env.CLIENT_ORIGIN, "http://localhost:5173", "http://localhost:4000"]
+    .filter(Boolean)
+    .map((o) => o.replace(/\/+$/, ""))
+);
+app.use("/api", (req, res, next) => {
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
+  const origin = req.get("origin");
+  if (!origin) return next(); // same-origin requests from older browsers, curl, tests
+  const self = `${req.protocol}://${req.get("host")}`;
+  if (origin === self || allowedOrigins.has(origin)) return next();
+  return res.status(403).json({ error: "Cross-site request blocked" });
+});
+
+// API responses are per-user and must never be cached by the browser or a
+// proxy (a shared computer's back button would otherwise show stock data).
+app.use("/api", (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/company", companyRoutes);
@@ -72,8 +123,15 @@ app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));
 // /client/dist). Any route that isn't an API call falls through to
 // index.html so React Router can handle client-side routing.
 const clientDist = path.join(__dirname, "..", "client", "dist");
-app.use(express.static(clientDist));
+// Vite fingerprints everything under /assets, so those can be cached for a
+// year; index.html must always be revalidated so a deploy shows up at once.
+app.use(
+  "/assets",
+  express.static(path.join(clientDist, "assets"), { immutable: true, maxAge: "1y", fallthrough: false })
+);
+app.use(express.static(clientDist, { index: false, maxAge: "1h" }));
 app.get(/^(?!\/api\/).*/, (req, res) => {
+  res.set("Cache-Control", "no-cache");
   res.sendFile(path.join(clientDist, "index.html"));
 });
 

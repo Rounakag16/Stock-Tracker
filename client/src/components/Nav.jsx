@@ -62,13 +62,17 @@ function Sheet({ open, onClose, children }) {
   );
 }
 
-function AccountActions({ username, onPassword, onLogout }) {
+function AccountActions({ username, onPassword, onLogout, passwordLabel = "Change password" }) {
   return (
     <div className="border-t border-line mt-2 pt-2">
       {username && <p className="px-4 py-2 text-xs text-slate-500 truncate">Signed in as {username}</p>}
       <button onClick={onPassword} className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50">
-        Change password
+        {passwordLabel}
       </button>
+      <div className="flex gap-4 px-4 pt-2 pb-1 text-xs text-slate-400">
+        <Link to="/terms" className="hover:text-slate-600">Terms</Link>
+        <Link to="/privacy" className="hover:text-slate-600">Privacy</Link>
+      </div>
       <button onClick={onLogout} className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50">
         Sign out
       </button>
@@ -76,7 +80,7 @@ function AccountActions({ username, onPassword, onLogout }) {
   );
 }
 
-export function AdminNav({ username, companyName }) {
+export function AdminNav({ username, companyName, hasPassword = true }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -211,7 +215,7 @@ export function AdminNav({ username, companyName }) {
         />
       </Sheet>
 
-      <ChangePasswordModal open={showPassword} onClose={() => setShowPassword(false)} />
+      <ChangePasswordModal open={showPassword} onClose={() => setShowPassword(false)} hasPassword={hasPassword} />
     </>
   );
 }

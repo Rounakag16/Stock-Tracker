@@ -16,6 +16,7 @@ const StockItem = require("../src/models/StockItem");
 const Warehouse = require("../src/models/Warehouse");
 const ActivityLog = require("../src/models/ActivityLog");
 const { createToken } = require("../src/middleware/auth");
+const { mockSessionUser } = require("./sessionMock");
 const stockRoutes = require("../src/routes/stock");
 
 afterEach(() => mock.restoreAll());
@@ -80,6 +81,7 @@ function post(server, path, body, cookie) {
 }
 
 function adminCookie() {
+  mockSessionUser({ userId: "user-1", companyId: "company-1" });
   const token = createToken({
     userId: "user-1",
     username: "admin",

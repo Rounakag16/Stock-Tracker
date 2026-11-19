@@ -1,6 +1,7 @@
 const express = require("express");
-const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const Company = require("../models/Company");
+const { validateNewPassword, hashPassword } = require("../lib/password");
 const { requireAuth } = require("../middleware/auth");
 const { logActivity } = require("../lib/stockOps");
 const { asyncHandler } = require("../lib/asyncHandler");
@@ -15,7 +16,13 @@ router.get(
       username: 1,
     });
     return res.json({
-      employees: employees.map((e) => ({ id: e._id, username: e.username, created_at: e.createdAt })),
+      employees: employees.map((e) => ({
+        id: e._id,
+        username: e.username,
+        created_at: e.createdAt,
+        last_login_at: e.lastLoginAt,
+        pending_password: !!e.mustChangePassword,
+      })),
     });
   })
 );
@@ -24,17 +31,17 @@ router.post(
   "/",
   requireAuth(["admin"]),
   asyncHandler(async (req, res) => {
-    const { username, password } = req.body;
+    const trimmed = typeof req.body.username === "string" ? req.body.username.trim().slice(0, 60) : "";
+    const password = typeof req.body.password === "string" ? req.body.password : "";
 
-    if (!username?.trim() || !password) {
+    if (!trimmed || !password) {
       return res.status(400).json({ error: "Username and password are required" });
     }
-    if (password.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters" });
-    }
 
-    const trimmed = username.trim();
-    const passwordHash = bcrypt.hashSync(password, 10);
+    const company = await Company.findById(req.session.companyId).select("name");
+    const passwordError = await validateNewPassword(password, { username: trimmed, companyName: company?.name });
+    if (passwordError) return res.status(400).json({ error: passwordError, field: "password" });
+    const passwordHash = await hashPassword(password);
 
     try {
       const employee = await User.create({
@@ -42,6 +49,9 @@ router.post(
         username: trimmed,
         passwordHash,
         role: "employee",
+        // The admin chose this password, so the employee replaces it with
+        // their own (and accepts the Terms) on first sign-in.
+        mustChangePassword: true,
       });
 
       await logActivity({

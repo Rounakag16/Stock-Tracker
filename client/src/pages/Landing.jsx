@@ -3,6 +3,7 @@ import { BRAND_NAME, BrandLogo } from "../components/Brand";
 import warehouseArt from "../assets/warehouse-hero.webp";
 import { LedgerPreview } from "../components/LedgerPreview";
 import { ACTION_TONES } from "../components/ui";
+import { SiteFooter } from "../components/SiteFooter";
 
 function Icon({ path, className = "w-5 h-5" }) {
   return (
@@ -465,22 +466,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-line">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <BrandLogo size="sm" />
-          <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500">
-            {NAV.map((n) => (
-              <a key={n.href} href={n.href} className="hover:text-ink">
-                {n.label}
-              </a>
-            ))}
-            <Link to="/login" className="hover:text-ink">
-              Sign in
-            </Link>
-          </nav>
-          <p className="text-sm text-slate-400">© {new Date().getFullYear()} {BRAND_NAME}</p>
-        </div>
-      </footer>
+      <SiteFooter links={NAV} />
     </div>
   );
 }

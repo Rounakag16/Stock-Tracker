@@ -4,6 +4,17 @@ import { Modal, Alert, EmptyState, PasswordInput } from "../components/ui";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { get, post, del } from "../lib/api";
 
+// A temporary password that's easy to read out or type on a phone: no
+// look-alike characters (0/O, 1/l/I). The employee replaces it on first
+// sign-in, so it only has to survive until then.
+function generateTempPassword() {
+  const alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint32Array(10);
+  crypto.getRandomValues(bytes);
+  const chars = Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+  return `${chars.slice(0, 5)}-${chars.slice(5)}`;
+}
+
 export default function AdminEmployeesPage() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +104,13 @@ export default function AdminEmployeesPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-semibold text-slate-900 truncate">{emp.username}</p>
-                    <p className="text-xs text-slate-500">Joined {new Date(emp.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs text-slate-500">
+                      Joined {new Date(emp.created_at).toLocaleDateString()}
+                      {emp.last_login_at && <> · Last signed in {new Date(emp.last_login_at).toLocaleDateString()}</>}
+                    </p>
+                    {emp.pending_password && (
+                      <p className="text-xs font-medium text-accent-800 mt-0.5">Hasn't set their own password yet</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 sm:flex items-center gap-2 shrink-0">
@@ -118,14 +135,24 @@ export default function AdminEmployeesPage() {
             <input className="input" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="e.g. john" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+            <div className="flex items-baseline justify-between gap-3 mb-1.5">
+              <label htmlFor="temp-password" className="block text-sm font-medium text-slate-700">Temporary password</label>
+              <button type="button" onClick={() => setNewPassword(generateTempPassword())} className="text-sm font-semibold text-brand-700 hover:underline">
+                Generate
+              </button>
+            </div>
             <PasswordInput
+              id="temp-password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Min. 6 characters"
-              minLength={6}
+              placeholder="At least 8 characters"
+              minLength={8}
+              autoComplete="new-password"
               required
             />
+            <p className="text-xs text-slate-500 mt-1.5">
+              Share it with them in person. They'll choose their own password the first time they sign in, with your company code.
+            </p>
           </div>
           <button type="submit" className="btn-primary w-full" disabled={submitting}>
             {submitting ? "Creating..." : "Create Employee"}

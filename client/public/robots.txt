@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /employee
+Disallow: /api/
+Disallow: /reset-password
+Disallow: /verify-email
+
+Sitemap: https://warelyy.onrender.com/sitemap.xml

@@ -1,85 +1,81 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Alert, PasswordInput } from "../components/ui";
+import { Alert } from "../components/ui";
+import { AuthLayout } from "../components/AuthLayout";
+import { NewPasswordFields, passwordsReady } from "../components/PasswordFields";
 import { post } from "../lib/api";
+
+const PANEL = {
+  panelTitle: "Pick something you'll remember.",
+  panelPoints: [
+    "Longer beats complicated — a short phrase works well",
+    "Don't reuse a password from another site",
+    "You'll be signed out on every other device",
+  ],
+};
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
   const navigate = useNavigate();
 
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-
-    if (newPassword !== confirmPassword) {
+    if (password !== confirm) {
       setError("Passwords don't match");
       return;
     }
-
     setSubmitting(true);
-    const { ok, data } = await post("/auth/reset-password", { token, newPassword });
+    const { ok, data } = await post("/auth/reset-password", { token, newPassword: password });
     setSubmitting(false);
-
     if (!ok) {
       setError(data.error);
       return;
     }
-    navigate("/login", { replace: true });
+    navigate("/login", { replace: true, state: { notice: "Your password has been reset. Sign in with your new password." } });
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-paper">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <Link
-            to="/"
-            className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-ink flex items-center justify-center shadow-lg shadow-ink/20"
-          >
-            <svg className="w-8 h-8 text-paper" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
+    <AuthLayout title="Choose a new password" subtitle="Set a new password for your Warely account." {...PANEL}>
+      {!token ? (
+        <div className="space-y-5">
+          <Alert type="error" message="This link is incomplete. Request a new one and open it straight from the email." />
+          <Link to="/forgot-password" className="btn-primary w-full">
+            Request a new link
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">Set a new password</h1>
         </div>
-
-        <div className="card p-6">
-          {!token ? (
-            <Alert type="error" message="This link is missing a reset token. Request a new one from the forgot-password page." />
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && <Alert type="error" message={error} />}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
-                <PasswordInput
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  minLength={6}
-                  required
-                  placeholder="Min. 6 characters"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Confirm Password</label>
-                <PasswordInput
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  minLength={6}
-                  required
-                />
-              </div>
-              <button type="submit" className="btn-primary w-full" disabled={submitting}>
-                {submitting ? "Saving..." : "Set new password"}
-              </button>
-            </form>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="space-y-2">
+              <Alert type="error" message={error} onDismiss={() => setError("")} />
+              {/expired|invalid/i.test(error) && (
+                <Link to="/forgot-password" className="text-sm font-semibold text-brand-700 hover:underline">
+                  Request a new link
+                </Link>
+              )}
+            </div>
           )}
-        </div>
-      </div>
-    </div>
+          <NewPasswordFields
+            password={password}
+            confirm={confirm}
+            onPassword={setPassword}
+            onConfirm={setConfirm}
+            label="New password"
+            confirmLabel="Confirm new password"
+            autoFocus
+          />
+          <button type="submit" className="btn-primary w-full !py-3.5 text-base" disabled={submitting || !passwordsReady(password, confirm)}>
+            {submitting ? "Saving…" : "Set new password"}
+          </button>
+        </form>
+      )}
+    </AuthLayout>
   );
 }

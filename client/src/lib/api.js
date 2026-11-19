@@ -1,6 +1,6 @@
 // Paths that are allowed to return 401 without bouncing the user to the
 // login page (checking the session, logging in, signing up).
-const AUTH_PATHS = ["/auth/login", "/auth/register"];
+const AUTH_PATHS = ["/auth/"];
 
 function fallbackError(status) {
   if (status === 0) return "Can't reach the server. Check your connection and try again.";
@@ -14,7 +14,13 @@ function fallbackError(status) {
 
 // When a session expires mid-use, send the user back to sign in instead of
 // leaving every button silently failing.
-function handleExpiredSession(path, status) {
+function handleExpiredSession(path, status, data) {
+  // A required step (new Terms, replacing an admin-set password) became
+  // due while the app was open — reload so the account gate shows.
+  if (status === 403 && (data?.code === "TERMS_REQUIRED" || data?.code === "PASSWORD_CHANGE_REQUIRED")) {
+    window.location.reload();
+    return;
+  }
   if (status !== 401 || AUTH_PATHS.some((p) => path.startsWith(p))) return;
   if (!window.location.pathname.startsWith("/login")) {
     window.location.assign("/login");
@@ -39,7 +45,7 @@ export async function api(path, options = {}) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (!data.error) data.error = fallbackError(res.status);
-    handleExpiredSession(path, res.status);
+    handleExpiredSession(path, res.status, data);
   }
   return { ok: res.ok, status: res.status, data };
 }
@@ -62,7 +68,7 @@ export async function download(path, fallbackName = "download.xlsx") {
   }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    handleExpiredSession(path, res.status);
+    handleExpiredSession(path, res.status, data);
     return { ok: false, error: data.error || fallbackError(res.status) };
   }
 

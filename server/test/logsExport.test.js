@@ -12,6 +12,7 @@ const cookieParser = require("cookie-parser");
 const { parseWorkbookRows } = require("../src/lib/excel");
 const ActivityLog = require("../src/models/ActivityLog");
 const { createToken } = require("../src/middleware/auth");
+const { mockSessionUser } = require("./sessionMock");
 const logRoutes = require("../src/routes/logs");
 
 afterEach(() => mock.restoreAll());
@@ -66,6 +67,7 @@ test("export includes a Party column, from partyName or legacy details", async (
   });
 
   try {
+    mockSessionUser({ userId: "user-1", companyId: "company-1" });
     const token = createToken({
       userId: "user-1",
       username: "admin",

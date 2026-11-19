@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { Modal, Alert, PasswordInput } from "./ui";
+import { NewPasswordFields, passwordsReady } from "./PasswordFields";
 import { post } from "../lib/api";
 
-export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername }) {
+// Three uses:
+//   - change your own password (asks for the current one)
+//   - set a first password on a Google-only account (hasPassword=false)
+//   - an admin resetting an employee's password (resetUserId)
+export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername, hasPassword = true, onSaved }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -11,6 +16,7 @@ export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername 
   const [submitting, setSubmitting] = useState(false);
 
   const isReset = !!resetUserId;
+  const needsCurrent = !isReset && hasPassword;
 
   function handleClose() {
     setCurrentPassword("");
@@ -24,20 +30,14 @@ export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Passwords don't match");
       return;
     }
 
     setSubmitting(true);
-
     const body = { newPassword };
-    if (!isReset) body.currentPassword = currentPassword;
+    if (needsCurrent) body.currentPassword = currentPassword;
     if (isReset) body.userId = resetUserId;
 
     const { ok, data } = await post("/users/password", body);
@@ -48,20 +48,41 @@ export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername 
       return;
     }
 
-    setSuccess(isReset ? "Password reset successfully" : "Password changed successfully");
-    setTimeout(handleClose, 1200);
+    setSuccess(
+      isReset
+        ? `Password reset. ${resetUsername} has been signed out and will choose their own password next time they sign in.`
+        : "Password saved. You've been signed out on your other devices."
+    );
+    onSaved?.();
+    setTimeout(handleClose, isReset ? 2500 : 1800);
   }
 
+  const title = isReset ? `Reset password — ${resetUsername}` : hasPassword ? "Change password" : "Set a password";
+
   return (
-    <Modal open={open} onClose={handleClose} title={isReset ? `Reset Password — ${resetUsername}` : "Change Password"}>
+    <Modal open={open} onClose={handleClose} title={title}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <Alert type="error" message={error} />}
         {success && <Alert type="success" message={success} />}
 
-        {!isReset && (
+        {isReset && (
+          <p className="text-sm text-slate-500">
+            Give {resetUsername} this temporary password in person. They'll be asked to replace it with their own when they next sign in.
+          </p>
+        )}
+        {!isReset && !hasPassword && (
+          <p className="text-sm text-slate-500">
+            You sign in with Google. Add a password to also sign in with your email.
+          </p>
+        )}
+
+        {needsCurrent && (
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Current Password</label>
+            <label htmlFor="current-password" className="block text-sm font-semibold text-ink mb-1.5">
+              Current password
+            </label>
             <PasswordInput
+              id="current-password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
@@ -70,30 +91,22 @@ export function ChangePasswordModal({ open, onClose, resetUserId, resetUsername 
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
-          <PasswordInput
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-            minLength={6}
-            autoComplete="new-password"
-          />
-        </div>
+        <NewPasswordFields
+          password={newPassword}
+          confirm={confirmPassword}
+          onPassword={setNewPassword}
+          onConfirm={setConfirmPassword}
+          label={isReset ? "Temporary password" : "New password"}
+          confirmLabel={isReset ? "Confirm temporary password" : "Confirm new password"}
+          idPrefix={isReset ? "reset" : "change"}
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Confirm New Password</label>
-          <PasswordInput
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            minLength={6}
-            autoComplete="new-password"
-          />
-        </div>
-
-        <button type="submit" className="btn-primary w-full" disabled={submitting || !!success}>
-          {submitting ? "Saving..." : isReset ? "Reset Password" : "Change Password"}
+        <button
+          type="submit"
+          className="btn-primary w-full"
+          disabled={submitting || !!success || !passwordsReady(newPassword, confirmPassword) || (needsCurrent && !currentPassword)}
+        >
+          {submitting ? "Saving…" : isReset ? "Reset password" : "Save password"}
         </button>
       </form>
     </Modal>
