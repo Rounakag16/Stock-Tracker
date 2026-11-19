@@ -119,7 +119,7 @@ export default function SignupPage() {
   return (
     <AuthLayout
       title="Create your workspace"
-      subtitle="Set up stock tracking for your business. It takes about a minute."
+      subtitle="Set up inventory management for your business. It takes about a minute."
       topLink={{ text: "Already have a workspace?", label: "Sign in", to: "/login" }}
       panelTitle="Know what's on the shelf, at every location."
       panelPoints={PANEL_POINTS}

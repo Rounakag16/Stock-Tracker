@@ -1,22 +1,26 @@
 import { Link } from "react-router-dom";
 
-export const BOX_PATH = "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4";
+export const BRAND_NAME = "Warely";
+
+// The Warely mark: a "W" whose middle is an open box. Same geometry as
+// public/favicon.svg (both drawn on a 100×100 grid).
+const GLYPH_PATH =
+  "M14.04 32.06 L16.43 29.67 L25.68 34.13 L27.27 36.84 L27.27 55.18 L33.01 50.72 L33.01 37.8 L47.61 44.82 L47.61 52.63 L52.39 52.63 L52.39 44.82 L66.99 37.8 L66.99 50.72 L72.73 55.18 L72.73 36.84 L74.32 34.13 L83.57 29.67 L85.96 32.06 L86.12 63.8 L84.21 67.46 L76.24 72.73 L72.09 72.57 L50 58.05 L27.91 72.57 L23.76 72.73 L15.79 67.46 L14.04 63.8 Z M50 23.92 L66.67 31.74 L50 39.71 L33.33 31.74 Z";
 
 const SIZES = {
-  sm: { box: "w-8 h-8 rounded-lg", icon: "w-4 h-4", text: "text-base" },
-  md: { box: "w-9 h-9 rounded-lg", icon: "w-5 h-5", text: "text-lg" },
-  lg: { box: "w-12 h-12 rounded-xl", icon: "w-6 h-6", text: "text-xl" },
+  sm: { box: "w-8 h-8", text: "text-base" },
+  md: { box: "w-9 h-9", text: "text-lg" },
+  lg: { box: "w-10 h-10", text: "text-xl" },
 };
 
-// Blue tile with a white box glyph — the app's mark.
+// Blue tile with the white W-box glyph — the app's mark.
 export function BrandMark({ size = "md", className = "" }) {
   const s = SIZES[size];
   return (
-    <span className={`${s.box} bg-brand-600 flex items-center justify-center shrink-0 ${className}`}>
-      <svg className={`${s.icon} text-white`} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={BOX_PATH} />
-      </svg>
-    </span>
+    <svg className={`${s.box} shrink-0 ${className}`} viewBox="0 0 100 100" aria-hidden="true">
+      <rect width="100" height="100" rx="22" className="fill-brand-600" />
+      <path d={GLYPH_PATH} fill="#fff" />
+    </svg>
   );
 }
 
@@ -24,10 +28,10 @@ export function BrandMark({ size = "md", className = "" }) {
 export function BrandLogo({ size = "md", tone = "dark", to = "/" }) {
   const s = SIZES[size];
   return (
-    <Link to={to} className="inline-flex items-center gap-2.5" aria-label="Stock Tracker home">
+    <Link to={to} className="inline-flex items-center gap-2.5" aria-label={`${BRAND_NAME} home`}>
       <BrandMark size={size} />
       <span className={`font-display font-bold tracking-tight whitespace-nowrap ${s.text} ${tone === "light" ? "text-white" : "text-ink"}`}>
-        Stock Tracker
+        {BRAND_NAME}
       </span>
     </Link>
   );

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { BrandLogo } from "../components/Brand";
+import { BRAND_NAME, BrandLogo } from "../components/Brand";
+import warehouseArt from "../assets/warehouse-hero.webp";
 import { LedgerPreview } from "../components/LedgerPreview";
 import { ACTION_TONES } from "../components/ui";
 
@@ -225,10 +226,10 @@ export default function LandingPage() {
                 For shops, godowns & warehouses
               </p>
               <h1 className="mt-6 font-display font-bold text-4xl sm:text-5xl lg:text-[3.4rem] tracking-tight leading-[1.08]">
-                Stock records you can trust, at every location.
+                Inventory you can trust, at every location.
               </h1>
               <p className="mt-6 text-lg text-slate-600 leading-relaxed max-w-xl">
-                Your team records what came in, what was sold and what moved. You approve it. Stock Tracker keeps the
+                Your team records what came in, what was sold and what moved. You approve it. {BRAND_NAME} keeps the
                 count, the history and the opening and closing stock for every day.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -313,7 +314,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-2 sm:grid-cols-[1.2fr_1fr_1fr] text-xs font-semibold uppercase tracking-wide text-slate-500 bg-slate-50 border-b border-line">
                 <span className="hidden sm:block px-4 py-3" />
                 <span className="px-4 py-3">Register / Excel</span>
-                <span className="px-4 py-3 text-brand-700">Stock Tracker</span>
+                <span className="px-4 py-3 text-brand-700">{BRAND_NAME}</span>
               </div>
               {COMPARISON.map((c) => (
                 <div key={c.row} className="grid grid-cols-2 sm:grid-cols-[1.2fr_1fr_1fr] text-sm border-b border-line last:border-0">
@@ -335,7 +336,7 @@ export default function LandingPage() {
         {/* Features */}
         <section id="features" className="scroll-mt-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
-            <SectionHeading eyebrow="Features" title="Everything a stock book should do." />
+            <SectionHeading eyebrow="Features" title="Everything your inventory book should do." />
             <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 border-t border-l border-line rounded-2xl overflow-hidden">
               {FEATURES.map((f) => (
                 <div key={f.title} className="p-6 sm:p-7 border-r border-b border-line bg-white">
@@ -435,19 +436,30 @@ export default function LandingPage() {
         {/* CTA */}
         <section className="border-t border-line">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
-            <div className="rounded-2xl bg-brand-600 text-white px-6 py-12 sm:px-12 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-              <div>
-                <h2 className="font-display font-bold text-3xl tracking-tight">Start your stock book today.</h2>
-                <p className="mt-2 text-brand-50 text-lg">Create a workspace, add your items and invite your team.</p>
+            <div className="relative overflow-hidden rounded-2xl border border-brand-100 bg-[#F5F8FF] lg:min-h-[380px] flex flex-col lg:justify-center">
+              <div className="relative z-10 px-6 pt-10 sm:px-12 lg:py-14 lg:max-w-[440px] xl:max-w-[500px] [&_.btn-primary]:whitespace-nowrap [&_.btn-secondary]:whitespace-nowrap">
+                <h2 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-ink">Put every godown on one screen.</h2>
+                <p className="mt-3 text-lg text-slate-600 leading-relaxed">Create a workspace, add your items and invite your team. It takes about a minute.</p>
+                <div className="mt-8 flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-3">
+                  <Link to="/signup" className="btn-primary !px-6 !py-3.5 text-base">
+                    Create your workspace
+                    <Icon path={ICONS.arrowRight} className="w-4 h-4" />
+                  </Link>
+                  <Link to="/login" className="btn-secondary !px-6 !py-3.5 text-base">
+                    Sign in
+                  </Link>
+                </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-                <Link to="/signup" className="btn bg-white text-brand-700 hover:bg-brand-50 !px-6 !py-3.5 text-base">
-                  Create your workspace
-                </Link>
-                <Link to="/login" className="btn border border-white/40 text-white hover:bg-white/10 !px-6 !py-3.5 text-base">
-                  Sign in
-                </Link>
-              </div>
+              {/* The art's left half is empty background in the card's colour, so on
+                  large screens it can sit flush right behind the text. */}
+              <img
+                src={warehouseArt}
+                alt=""
+                width="1600"
+                height="800"
+                loading="lazy"
+                className="mt-6 w-full h-56 sm:h-72 object-cover object-[88%_50%] lg:mt-0 lg:absolute lg:inset-y-0 lg:right-0 lg:h-full lg:w-auto lg:max-w-none lg:object-contain"
+              />
             </div>
           </div>
         </section>
@@ -466,7 +478,7 @@ export default function LandingPage() {
               Sign in
             </Link>
           </nav>
-          <p className="text-sm text-slate-400">© {new Date().getFullYear()} Stock Tracker</p>
+          <p className="text-sm text-slate-400">© {new Date().getFullYear()} {BRAND_NAME}</p>
         </div>
       </footer>
     </div>

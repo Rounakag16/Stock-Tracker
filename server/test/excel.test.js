@@ -87,7 +87,7 @@ function adminCookie() {
     companyId: "company-1",
     companyName: "Acme",
   });
-  return `stock_tracker_session=${token}`;
+  return `warely_session=${token}`;
 }
 
 test("upload adds to an existing item's quantity instead of replacing it", async () => {

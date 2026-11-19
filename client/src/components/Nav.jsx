@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { NotificationBell } from "./NotificationBell";
+import { BRAND_NAME, BrandMark } from "./Brand";
 import { del } from "../lib/api";
 
 const adminLinks = [
@@ -31,18 +32,6 @@ function NavIcon({ d, active, className = "w-6 h-6" }) {
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2 : 1.5} d={d} />
     </svg>
-  );
-}
-
-function BrandMark({ size = "sm" }) {
-  const box = size === "sm" ? "w-8 h-8 rounded-lg" : "w-10 h-10 rounded-xl";
-  const icon = size === "sm" ? "w-4 h-4" : "w-5 h-5";
-  return (
-    <div className={`${box} bg-brand-600 flex items-center justify-center shrink-0`}>
-      <svg className={`${icon} text-white`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-      </svg>
-    </div>
   );
 }
 
@@ -116,7 +105,7 @@ export function AdminNav({ username, companyName }) {
             <div className="flex items-center gap-3 min-w-0">
               <BrandMark size="lg" />
               <div className="min-w-0">
-                <h1 className="font-display font-bold text-white leading-tight break-words">{companyName || "Stock Tracker"}</h1>
+                <h1 className="font-display font-bold text-white leading-tight break-words">{companyName || BRAND_NAME}</h1>
                 <p className="text-xs text-slate-400">Admin Portal</p>
               </div>
             </div>
@@ -156,9 +145,9 @@ export function AdminNav({ username, companyName }) {
       <header className="lg:hidden sticky top-0 z-30 bg-ink text-white pt-safe">
         <div className="flex items-center justify-between gap-3 px-4 py-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
-            <BrandMark />
+            <BrandMark size="sm" />
             <div className="min-w-0">
-              <p className="font-display font-bold text-white leading-tight truncate">{companyName || "Stock Tracker"}</p>
+              <p className="font-display font-bold text-white leading-tight truncate">{companyName || BRAND_NAME}</p>
               <p className="text-[11px] text-slate-400 leading-tight">Admin</p>
             </div>
           </div>
@@ -242,9 +231,9 @@ export function EmployeeNav({ username, companyName }) {
       <header className="sticky top-0 z-30 bg-ink text-white pt-safe">
         <div className="flex items-center justify-between gap-3 px-4 py-2.5 max-w-2xl mx-auto">
           <div className="flex items-center gap-2.5 min-w-0">
-            <BrandMark />
+            <BrandMark size="sm" />
             <div className="min-w-0">
-              <p className="font-display font-bold text-white leading-tight truncate">{companyName || "Stock Tracker"}</p>
+              <p className="font-display font-bold text-white leading-tight truncate">{companyName || BRAND_NAME}</p>
               <p className="text-[11px] text-slate-400 leading-tight truncate">{username}</p>
             </div>
           </div>

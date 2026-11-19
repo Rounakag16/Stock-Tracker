@@ -17,10 +17,10 @@ if (!JWT_SECRET) {
     "\n⚠️  JWT_SECRET is not set — using an insecure dev-only default.\n" +
       "   Set JWT_SECRET in server/.env before deploying anywhere real.\n"
   );
-  JWT_SECRET = "stock-tracker-dev-secret-change-in-production";
+  JWT_SECRET = "warely-dev-secret-change-in-production";
 }
 
-const COOKIE_NAME = "stock_tracker_session";
+const COOKIE_NAME = "warely_session";
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 function createToken(payload) {

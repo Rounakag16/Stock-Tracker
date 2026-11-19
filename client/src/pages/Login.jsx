@@ -52,7 +52,7 @@ export default function LoginPage() {
     <AuthLayout
       title="Sign in"
       subtitle="Admins and employees both sign in here with your company code."
-      topLink={{ text: "New to Stock Tracker?", label: "Create a workspace", to: "/signup" }}
+      topLink={{ text: "New to Warely?", label: "Create a workspace", to: "/signup" }}
       panelTitle="Every sale, receipt and transfer — approved and on record."
       panelPoints={[
         "Approve your team's entries before stock changes",

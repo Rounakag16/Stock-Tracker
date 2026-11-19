@@ -207,7 +207,7 @@ test("daily report reconstructs opening/closing per day, including backdated and
   const server = await new Promise((resolve) => {
     const s = app.listen(0, () => resolve(s));
   });
-  const cookie = `stock_tracker_session=${createToken({
+  const cookie = `warely_session=${createToken({
     userId: USER_ID, username: "admin", role: "admin", companyId: COMPANY_ID, companyName: "Acme",
   })}`;
 

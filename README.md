@@ -1,6 +1,8 @@
-# Stock Tracker (MERN)
+# Warely — inventory management (MERN)
 
 A mobile-first, multi-tenant inventory management app — MongoDB, Express, React, Node.js.
+
+> The default MongoDB database is still named `stock-tracker` (the app's original name). Existing data lives there, so keep it unless you migrate.
 
 Any shop or company can create its own workspace (a "company code"), with separate admin and employee logins. Data between companies is fully isolated.
 
@@ -113,7 +115,7 @@ Use a process manager like [pm2](https://pm2.keymetrics.io/) to keep it running:
 
 ```bash
 npm install -g pm2
-pm2 start server/index.js --name stock-tracker
+pm2 start server/index.js --name warely
 ```
 
 Put it behind a reverse proxy (nginx or Caddy) for HTTPS.
@@ -130,7 +132,7 @@ Put it behind a reverse proxy (nginx or Caddy) for HTTPS.
 ```bash
 git init
 git add .
-git commit -m "Stock Tracker (MERN)"
+git commit -m "Warely (MERN)"
 git branch -M main
 git remote add origin https://github.com/<your-username>/<your-repo>.git
 git push -u origin main
