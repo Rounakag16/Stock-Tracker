@@ -46,11 +46,11 @@ function AcceptTerms({ firstTime, onDone }) {
 
   return (
     <GateShell
-      title={firstTime ? "Welcome to Warely" : "We've updated our terms"}
+      title={firstTime ? "Welcome to WareSync" : "We've updated our terms"}
       subtitle={
         firstTime
-          ? "Before you start, please read and accept the terms for using Warely."
-          : `Our Terms of Service and Privacy Policy were updated on ${SITE.legalUpdated}. Please review and accept them to keep using Warely.`
+          ? "Before you start, please read and accept the terms for using WareSync."
+          : `Our Terms of Service and Privacy Policy were updated on ${SITE.legalUpdated}. Please review and accept them to keep using WareSync.`
       }
     >
       <form onSubmit={accept} className="space-y-5">

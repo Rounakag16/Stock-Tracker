@@ -5,7 +5,7 @@ import { SiteFooter } from "../components/SiteFooter";
 
 export default function NotFoundPage() {
   useEffect(() => {
-    document.title = "Page not found · Warely";
+    document.title = "Page not found · WareSync";
     // Tell search engines not to index the client-side 404.
     const meta = document.createElement("meta");
     meta.name = "robots";
@@ -13,7 +13,7 @@ export default function NotFoundPage() {
     document.head.appendChild(meta);
     return () => {
       meta.remove();
-      document.title = "Warely — Inventory management for shops & warehouses";
+      document.title = "WareSync — Inventory management for shops & warehouses";
     };
   }, []);
 

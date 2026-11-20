@@ -207,7 +207,7 @@ router.post(
 // ID token Google issued; we verify its signature and audience here, never
 // trusting anything the client says about who the user is.
 //   Known account  → signed in.
-//   New to Warely  → { needsWorkspace, signupToken } so the client can ask
+//   New to WareSync  → { needsWorkspace, signupToken } so the client can ask
 //                    for a business name and Terms acceptance, then call
 //                    /google/register.
 router.post(

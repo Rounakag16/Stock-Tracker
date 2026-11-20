@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
 
   if (sentTo) {
     return (
-      <AuthLayout title="Check your email" subtitle={`If ${sentTo} belongs to a Warely account, a reset link is on its way.`} {...PANEL}>
+      <AuthLayout title="Check your email" subtitle={`If ${sentTo} belongs to a WareSync account, a reset link is on its way.`} {...PANEL}>
         <div className="space-y-5">
           <ul className="space-y-2 text-sm text-slate-600 list-disc pl-5">
             <li>The link expires in 1 hour and can be used once.</li>

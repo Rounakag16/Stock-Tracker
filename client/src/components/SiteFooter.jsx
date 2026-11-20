@@ -35,7 +35,7 @@ export function SiteFooter({ links = [] }) {
       </div>
       <div className="border-t border-line">
         <p className="mx-auto max-w-6xl px-4 sm:px-6 py-5 text-xs text-slate-400">
-          © {new Date().getFullYear()} {BRAND_NAME}. Warely is a record-keeping tool and does not provide accounting, tax or legal advice.
+          © {new Date().getFullYear()} {BRAND_NAME}. WareSync is a record-keeping tool and does not provide accounting, tax or legal advice.
         </p>
       </div>
     </footer>

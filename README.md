@@ -1,4 +1,4 @@
-# Warely — inventory management (MERN)
+# WareSync — inventory management (MERN)
 
 A mobile-first, multi-tenant inventory management app — MongoDB, Express, React, Node.js.
 
@@ -87,7 +87,7 @@ Then visit whatever port your server is listening on (default `4000`, or whateve
 | `PORT`          | No               | Defaults to `4000`                                                                                                                                              |
 | `CLIENT_ORIGIN` | No               | Only used in development, for CORS                                                                                                                              |
 | `APP_TIMEZONE`  | No               | IANA timezone that decides which calendar day "today" is for stock entries (default `Asia/Kolkata`).                                                             |
-| `APP_URL`       | Yes (for email)  | Public URL used in email links, e.g. `https://warelyy.onrender.com`. Never taken from the request, so links can't be spoofed.                                  |
+| `APP_URL`       | Yes (for email)  | Public URL used in email links, e.g. `https://waresyncc.onrender.com`. Never taken from the request, so links can't be spoofed.                                  |
 | `EMAIL_PROVIDER`| No               | `brevo` or `resend`. Empty = no password-reset / confirmation emails (dev prints them to the console).                                                         |
 | `EMAIL_API_KEY` | With provider    | The provider's API key.                                                                                                                                         |
 | `EMAIL_FROM`    | With provider    | Sender address verified with the provider.                                                                                                                      |
@@ -129,7 +129,7 @@ Use a process manager like [pm2](https://pm2.keymetrics.io/) to keep it running:
 
 ```bash
 npm install -g pm2
-pm2 start server/index.js --name warely
+pm2 start server/index.js --name waresync
 ```
 
 Put it behind a reverse proxy (nginx or Caddy) for HTTPS.
@@ -146,7 +146,7 @@ Put it behind a reverse proxy (nginx or Caddy) for HTTPS.
 ```bash
 git init
 git add .
-git commit -m "Warely (MERN)"
+git commit -m "WareSync (MERN)"
 git branch -M main
 git remote add origin https://github.com/<your-username>/<your-repo>.git
 git push -u origin main

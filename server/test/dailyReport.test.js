@@ -209,7 +209,7 @@ test("daily report reconstructs opening/closing per day, including backdated and
     const s = app.listen(0, () => resolve(s));
   });
   mockSessionUser({ userId: USER_ID, companyId: COMPANY_ID });
-  const cookie = `warely_session=${createToken({
+  const cookie = `waresync_session=${createToken({
     userId: USER_ID, username: "admin", role: "admin", companyId: COMPANY_ID, companyName: "Acme",
   })}`;
 

@@ -39,7 +39,7 @@ export default function VerifyEmailPage() {
         {state === "error" && <Alert type="error" message={message} />}
         {state !== "working" && (
           <Link to="/admin/settings" className="btn-primary w-full !py-3.5 text-base">
-            {state === "done" ? "Continue to Warely" : "Go to Settings to send a new link"}
+            {state === "done" ? "Continue to WareSync" : "Go to Settings to send a new link"}
           </Link>
         )}
       </div>

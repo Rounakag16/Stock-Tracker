@@ -12,7 +12,7 @@ const sections = [
     title: "Who we are",
     body: (
       <p>
-        Warely is operated by {SITE.legalName}, {SITE.country} (“we”, “us”). For your account details we decide how and why
+        WareSync is operated by {SITE.legalName}, {SITE.country} (“we”, “us”). For your account details we decide how and why
         they're used, so we're responsible for them (a “Data Fiduciary” under India's Digital Personal Data Protection Act,
         2023). Contact us any time at <Email />.
       </p>
@@ -70,7 +70,7 @@ const sections = [
         When your workspace records details about other people — like a customer's name on a sale, or an employee's username —
         your business decides what to record and why. For that data, your business is responsible as the Data Fiduciary and
         we process it only on its behalf to provide the Service. If you're a customer, supplier or employee of a business that
-        uses Warely, please contact that business first about your data; we'll help them respond.
+        uses WareSync, please contact that business first about your data; we'll help them respond.
       </p>
     ),
   },
@@ -79,7 +79,7 @@ const sections = [
     title: "Who we share it with",
     body: (
       <>
-        <p>We share data only with service providers that help us run Warely, under their own security and confidentiality obligations:</p>
+        <p>We share data only with service providers that help us run WareSync, under their own security and confidentiality obligations:</p>
         <ul>
           <li><strong>Render</strong> — application hosting (servers in the United States).</li>
           <li><strong>MongoDB Atlas</strong> — database hosting.</li>
@@ -89,7 +89,7 @@ const sections = [
         </ul>
         <p>
           We may also disclose data when required by law or by a lawful request from a government authority, or to protect the
-          rights and safety of our users or the public. If Warely is ever transferred to someone else, your data would move
+          rights and safety of our users or the public. If WareSync is ever transferred to someone else, your data would move
           with it under this policy, and we'd tell you first.
         </p>
       </>
@@ -142,9 +142,9 @@ const sections = [
     title: "Cookies and local storage",
     body: (
       <>
-        <p>Warely uses only what's strictly needed for it to work — no advertising or analytics cookies:</p>
+        <p>WareSync uses only what's strictly needed for it to work — no advertising or analytics cookies:</p>
         <ul>
-          <li><strong>warely_session</strong> (cookie, 7 days): keeps you signed in. Secure and HTTP-only.</li>
+          <li><strong>waresync_session</strong> (cookie, 7 days): keeps you signed in. Secure and HTTP-only.</li>
           <li><strong>Local storage</strong> on your device: your last-used company code and which sign-in tab you used, so you don't have to retype them.</li>
           <li>If you click “Continue with Google”, Google may set its own cookies under <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Google's Privacy Policy</a>.</li>
         </ul>
@@ -175,7 +175,7 @@ const sections = [
     title: "Children",
     body: (
       <p>
-        Warely is a business tool for adults. We don't knowingly collect data from anyone under 18. If you believe a child has
+        WareSync is a business tool for adults. We don't knowingly collect data from anyone under 18. If you believe a child has
         signed up, contact us and we'll delete the account.
       </p>
     ),

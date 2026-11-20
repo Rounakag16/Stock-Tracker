@@ -15,7 +15,7 @@ export function LegalLayout({ title, intro, sections }) {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
     else window.scrollTo(0, 0);
     return () => {
-      document.title = "Warely — Inventory management for shops & warehouses";
+      document.title = "WareSync — Inventory management for shops & warehouses";
     };
   }, [title, hash]);
 

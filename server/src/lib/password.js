@@ -20,7 +20,7 @@ const COMMON = new Set(
     "qwerty123", "qwertyuiop", "qwerty12", "1q2w3e4r", "1qaz2wsx", "asdfghjk", "zxcvbnm1",
     "iloveyou", "iloveyou1", "sunshine", "princess", "football", "baseball", "superman",
     "welcome1", "welcome123", "letmein1", "admin123", "administrator", "changeme",
-    "abcd1234", "abc12345", "aa123456", "india123", "india@123", "warely123", "warely",
+    "abcd1234", "abc12345", "aa123456", "india123", "india@123", "waresync123", "waresync",
     "test1234", "default1", "trustno1", "computer", "whatever", "starwars", "dragon12",
   ].map((p) => p.toLowerCase())
 );
@@ -59,7 +59,7 @@ async function isBreached(password) {
   const suffix = sha1.slice(5);
   try {
     const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
-      headers: { "Add-Padding": "true", "User-Agent": "warely-password-check" },
+      headers: { "Add-Padding": "true", "User-Agent": "waresync-password-check" },
       signal: AbortSignal.timeout(2500),
     });
     if (!res.ok) return false;

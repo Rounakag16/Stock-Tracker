@@ -9,7 +9,7 @@ import { useAuthConfig } from "../lib/authConfig";
 // Remember, on this device, which way the person signs in and their
 // company code — the field people forget most.
 const CODE_KEY = "st:lastCompanyCode";
-const MODE_KEY = "warely:loginMode";
+const MODE_KEY = "waresync:loginMode";
 function readStored(key, fallback = "") {
   try {
     return localStorage.getItem(key) || fallback;
@@ -87,7 +87,7 @@ export default function LoginPage() {
     <AuthLayout
       title="Sign in"
       subtitle={mode === "email" ? "Welcome back. Sign in to manage your workspace." : "Employees sign in with the company code from their admin."}
-      topLink={{ text: "New to Warely?", label: "Create a workspace", to: "/signup" }}
+      topLink={{ text: "New to WareSync?", label: "Create a workspace", to: "/signup" }}
       panelTitle="Every sale, receipt and transfer — approved and on record."
       panelPoints={[
         "Approve your team's entries before stock changes",
@@ -97,7 +97,7 @@ export default function LoginPage() {
       footer={
         mode === "email" ? (
           <>
-            By continuing, you agree to Warely's{" "}
+            By continuing, you agree to WareSync's{" "}
             <Link to="/terms" className="font-medium text-ink hover:underline">Terms of Service</Link> and{" "}
             <Link to="/privacy" className="font-medium text-ink hover:underline">Privacy Policy</Link>.
           </>

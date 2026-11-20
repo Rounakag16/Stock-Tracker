@@ -57,7 +57,7 @@ function AccountCard({ user, reloadUser }) {
   }
 
   async function signOutEverywhere() {
-    if (!confirm("Sign out of Warely on every device, including this one?")) return;
+    if (!confirm("Sign out of WareSync on every device, including this one?")) return;
     await post("/auth/logout-all", {});
     navigate("/login", { replace: true });
   }
@@ -65,7 +65,7 @@ function AccountCard({ user, reloadUser }) {
   return (
     <div className="card p-5 sm:p-6 mb-6">
       <h2 className="font-bold text-slate-900 mb-1">Your account</h2>
-      <p className="text-sm text-slate-500 mb-5">How you sign in to Warely as {user.username}.</p>
+      <p className="text-sm text-slate-500 mb-5">How you sign in to WareSync as {user.username}.</p>
 
       {notice && (
         <div className="mb-4">

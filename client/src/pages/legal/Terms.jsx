@@ -12,8 +12,8 @@ const sections = [
     body: (
       <>
         <p>
-          These Terms of Service (“Terms”) are an agreement between you and {SITE.legalName} (“Warely”, “we”, “us”), and they
-          cover your use of the Warely website and app (the “Service”). By creating a workspace, signing in, or using the
+          These Terms of Service (“Terms”) are an agreement between you and {SITE.legalName} (“WareSync”, “we”, “us”), and they
+          cover your use of the WareSync website and app (the “Service”). By creating a workspace, signing in, or using the
           Service, you agree to these Terms and to our <Link to="/privacy">Privacy Policy</Link>. If you don't agree, please
           don't use the Service.
         </p>
@@ -26,7 +26,7 @@ const sections = [
   },
   {
     id: "eligibility",
-    title: "Who can use Warely",
+    title: "Who can use WareSync",
     body: (
       <p>
         You must be at least 18 years old and able to enter into a binding contract under Indian law to create a workspace.
@@ -60,7 +60,7 @@ const sections = [
     body: (
       <>
         <p>
-          Everything you put into Warely — items, quantities, warehouses, party names, requests and logs (“Your Data”) — stays
+          Everything you put into WareSync — items, quantities, warehouses, party names, requests and logs (“Your Data”) — stays
           yours. You give us permission to store, process and display Your Data only as needed to run the Service for you, keep
           it secure, and fix problems. We don't sell Your Data or use it for advertising.
         </p>
@@ -99,11 +99,11 @@ const sections = [
   },
   {
     id: "not-advice",
-    title: "Warely is a record-keeping tool, not advice",
+    title: "WareSync is a record-keeping tool, not advice",
     body: (
       <>
         <p>
-          Warely helps you record and view stock movements. Its figures — stock levels, daily opening and closing stock,
+          WareSync helps you record and view stock movements. Its figures — stock levels, daily opening and closing stock,
           reports and exports — are calculated only from the entries made in your workspace. They are not an audit, a
           valuation, or accounting, tax, GST or legal advice.
         </p>
@@ -120,7 +120,7 @@ const sections = [
     body: (
       <>
         <p>
-          Warely is currently offered free of charge. We work to keep it running and your data safe, but we don't promise it
+          WareSync is currently offered free of charge. We work to keep it running and your data safe, but we don't promise it
           will always be available, uninterrupted or error-free. It may be unavailable during maintenance, outages of our
           hosting providers, or events outside our control.
         </p>
@@ -148,7 +148,7 @@ const sections = [
     title: "Our intellectual property",
     body: (
       <p>
-        The Warely name, logo, software and website content belong to us. These Terms give you a limited, non-exclusive,
+        The WareSync name, logo, software and website content belong to us. These Terms give you a limited, non-exclusive,
         non-transferable right to use the Service for your business while you follow them — nothing else. If you send us
         feedback or ideas, we may use them freely without owing you anything.
       </p>
@@ -160,7 +160,7 @@ const sections = [
     body: (
       <>
         <p>
-          You can stop using Warely at any time. An admin can delete the whole workspace from <strong>Settings → Danger
+          You can stop using WareSync at any time. An admin can delete the whole workspace from <strong>Settings → Danger
           Zone</strong>; an admin can remove employee accounts from the Team page.
         </p>
         <p>
@@ -258,8 +258,8 @@ export default function TermsPage() {
       title="Terms of Service"
       intro={
         <p>
-          Plain-language summary: Warely is a free tool for recording stock. Your data is yours, keep your login safe, use it
-          lawfully, and double-check important numbers — Warely is a record-keeping tool, not accounting or tax advice. The full
+          Plain-language summary: WareSync is a free tool for recording stock. Your data is yours, keep your login safe, use it
+          lawfully, and double-check important numbers — WareSync is a record-keeping tool, not accounting or tax advice. The full
           terms below are what apply.
         </p>
       }

@@ -1,6 +1,6 @@
 {
-  "name": "Warely — Inventory management",
-  "short_name": "Warely",
+  "name": "WareSync — Inventory management",
+  "short_name": "WareSync",
   "start_url": "/login",
   "display": "standalone",
   "background_color": "#F8FAFC",

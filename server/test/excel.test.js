@@ -89,7 +89,7 @@ function adminCookie() {
     companyId: "company-1",
     companyName: "Acme",
   });
-  return `warely_session=${token}`;
+  return `waresync_session=${token}`;
 }
 
 test("upload adds to an existing item's quantity instead of replacing it", async () => {

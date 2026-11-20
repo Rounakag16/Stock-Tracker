@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <AuthLayout title="Choose a new password" subtitle="Set a new password for your Warely account." {...PANEL}>
+    <AuthLayout title="Choose a new password" subtitle="Set a new password for your WareSync account." {...PANEL}>
       {!token ? (
         <div className="space-y-5">
           <Alert type="error" message="This link is incomplete. Request a new one and open it straight from the email." />

@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 
-export const BRAND_NAME = "Warely";
+export const BRAND_NAME = "WareSync";
 
-// The Warely mark: a "W" whose middle is an open box. Same geometry as
+// The WareSync mark: a "W" whose middle is an open box. Same geometry as
 // public/favicon.svg (both drawn on a 100×100 grid).
 const GLYPH_PATH =
   "M14.04 32.06 L16.43 29.67 L25.68 34.13 L27.27 36.84 L27.27 55.18 L33.01 50.72 L33.01 37.8 L47.61 44.82 L47.61 52.63 L52.39 52.63 L52.39 44.82 L66.99 37.8 L66.99 50.72 L72.73 55.18 L72.73 36.84 L74.32 34.13 L83.57 29.67 L85.96 32.06 L86.12 63.8 L84.21 67.46 L76.24 72.73 L72.09 72.57 L50 58.05 L27.91 72.57 L23.76 72.73 L15.79 67.46 L14.04 63.8 Z M50 23.92 L66.67 31.74 L50 39.71 L33.33 31.74 Z";

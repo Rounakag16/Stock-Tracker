@@ -75,7 +75,7 @@ test("export includes a Party column, from partyName or legacy details", async (
       companyId: "company-1",
       companyName: "Acme",
     });
-    const res = await get(server, "/api/logs/export", `warely_session=${token}`);
+    const res = await get(server, "/api/logs/export", `waresync_session=${token}`);
     assert.equal(res.status, 200);
 
     const rows = await parseWorkbookRows(res.body);
